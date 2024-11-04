@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist",       // Where compiled JavaScript files will be placed
+    "rootDir": "./",          // The root directory of your TypeScript files
+    "target": "ES2020",
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "moduleResolution": "node", // Resolve modules like Node.js
+    "experimentalDecorators": true, // Enable decorator support
+    "emitDecoratorMetadata": true,  // Emit decorator metadata
+    "sourceMap": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "useDefineForClassFields": false, // Important for older versions
+    "noImplicitAny": true,
+    "skipLibCheck": true,
+    "typeRoots": ["./types", "./node_modules/@types"],
+    "resolveJsonModule": true
+  },
+  "include": [
+    "./**/*.ts",         // Include all TypeScript files
+    "./tests/**/*.test.ts"  // Specifically include test files
+  ],
+  "exclude": [
+    "node_modules", 
+    "dist",           // Exclude compiled files
+    "coverage"        // If you're generating coverage reports
+  ]
+}
