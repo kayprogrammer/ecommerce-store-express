@@ -177,7 +177,7 @@ authRouter.post('/login', validationMiddleware(LoginSchema), async (req: Request
         const userData: LoginSchema = req.body;
 
         const { email, password } = userData;
-        const user = await User.findOne({ email }).populate("country_")
+        const user = await User.findOne({ email })
         if (!user || !(await checkPassword(user, password as string))) throw new RequestError("Invalid credentials!", 400, ErrorCode.INVALID_CREDENTIALS);
         if (!user.isEmailVerified) throw new RequestError("Verify your email first", 400, ErrorCode.UNVERIFIED_USER);
 
@@ -243,7 +243,7 @@ authRouter.post('/google', validationMiddleware(TokenSchema), async (req: Reques
 authRouter.post('/refresh', validationMiddleware(RefreshTokenSchema), async (req: Request, res: Response, next: NextFunction) => {
     try {
         const refreshToken: string = req.body.refresh;
-        const user = await User.findOne({ "tokens.refresh": refreshToken }).populate("country_");
+        const user = await User.findOne({ "tokens.refresh": refreshToken });
         if (!user || !(await verifyRefreshToken(refreshToken))) throw new RequestError("Refresh token is invalid or expired!", 401, ErrorCode.INVALID_TOKEN);
 
         // Generate new tokens

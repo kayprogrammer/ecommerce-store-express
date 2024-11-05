@@ -82,7 +82,7 @@ const decodeAuth = async (token: string): Promise<IUser | null> => {
         return null;
       }
   
-      const user = await User.findOne({ _id: userId, "tokens.access": token }).populate(["country_", "professionalCategory"]);
+      const user = await User.findOne({ _id: userId, "tokens.access": token });
       return user;
     } catch (error) {
       return null;

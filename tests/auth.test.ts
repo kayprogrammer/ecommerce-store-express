@@ -147,7 +147,6 @@ describe("Testing User Authentication Flow", () => {
             email: newUser.email,
             password: "password"
         });
-
         expect(response.statusCode).toBe(201);
         expect(response.body).toMatchObject({
             status: "success",

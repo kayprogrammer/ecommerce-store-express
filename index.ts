@@ -6,6 +6,7 @@ import cors, { CorsOptions } from 'cors';
 import connectDB from './config/db';
 import authRouter from './routes/auth';
 import { handleError } from './middlewares/error';
+import generalRouter from './routes/general';
 
 // CORS options
 const corsOptions: CorsOptions = {
@@ -36,12 +37,12 @@ const swaggerDocument = {
   openapi: '3.0.0',
   info: {
     title: ENV.SITE_NAME,
-    version: '1.0.0',
+    version: '2.0.0',
     description: `
-      MyWorkAfrica API built with Node Express Typescript
+      Ecommerce Store API built with Node Express Typescript
     `
   },
-  servers: [{ url: '/api/v1' }],
+  servers: [{ url: '/api/v2' }],
   paths: SWAGGER_PATHS,
   components: {
     securitySchemes: {
@@ -60,7 +61,8 @@ const swaggerDocument = {
 };
 
 // Register Routes
-app.use("/api/v1/auth", authRouter)
+app.use("/api/v2/general", generalRouter)
+app.use("/api/v2/auth", authRouter)
 
 app.use(handleError)
 app.use('/', swaggerUi.serve, swaggerUi.setup(swaggerDocument));

@@ -2,7 +2,7 @@ import { createAccessToken, createRefreshToken, createUser } from "../managers/u
 import { IUser, User } from "../models/accounts"
 import { ACCOUNT_TYPE_CHOICES } from "../models/choices"
 
-const BASE_URL = "/api/v1"
+const BASE_URL = "/api/v2"
 
 
 // USERS AND AUTH------------
