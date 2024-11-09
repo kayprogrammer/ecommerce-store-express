@@ -3,7 +3,7 @@ import { CustomResponse } from "../config/utils";
 import {  User } from "../models/accounts";
 import { ErrorCode, NotFoundError, RequestError, ValidationErr } from "../config/handlers";
 import { validationMiddleware } from "../middlewares/error"
-import { checkPassword, createAccessToken, createRefreshToken, createUser, hashPassword, validateGoogleToken, verifyRefreshToken } from "../managers/users";
+import { checkPassword, createAccessToken, createRefreshToken, createUser, hashPassword, validateFacebookToken, validateGoogleToken, verifyRefreshToken } from "../managers/users";
 import { EmailSchema } from "../schemas/base";
 import { LoginSchema, RefreshTokenSchema, RegisterSchema, SetNewPasswordSchema, TokenSchema, TokensSchema, VerifyEmailSchema } from "../schemas/auth";
 import { sendEmail } from "../config/emailer"
@@ -217,6 +217,43 @@ authRouter.post('/google', validationMiddleware(TokenSchema), async (req: Reques
         else if (!user) {
             const userData = { name: payload.name, email: payload.email, password: ENV.SOCIAL_PASSWORD, avatar: payload.picture }
             user = await createUser(userData, true, AUTH_TYPE_CHOICES.GOOGLE)
+        }
+
+        // Generate tokens
+        const access = createAccessToken(user.id) 
+        const refresh = createRefreshToken() 
+
+        // Update user with access and refresh tokens
+        let tokens = { user, access, refresh }
+        await User.updateOne(
+            { _id: user._id },
+            { $push: { tokens } }
+        );
+        return res.status(201).json(CustomResponse.success('Login successful', tokens, TokensSchema))
+    } catch (error) {
+        next(error)
+    }
+});
+
+/**
+ * @route POST /facebook
+ * @description Generates access and refresh tokens for the user based on facebook auth token.
+ * @returns {Response} - JSON response with success message.
+ */
+authRouter.post('/facebook', validationMiddleware(TokenSchema), async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userData: TokenSchema = req.body;
+        const { token } = userData;
+        // Validate token
+        const { payload, error } = await validateFacebookToken(token as string)
+        if (error) throw new RequestError(error, 401, ErrorCode.INVALID_TOKEN);
+
+        // Get or Create User
+        let user = await User.findOne({ email: payload.email })
+        if (user && user.authType === AUTH_TYPE_CHOICES.GENERAL) throw new RequestError("Requires password to sign in to this account", 401, ErrorCode.INVALID_AUTH);
+        else if (!user) {
+            const userData = { name: payload.name, email: payload.email, password: ENV.SOCIAL_PASSWORD, avatar: payload.picture }
+            user = await createUser(userData, true, AUTH_TYPE_CHOICES.FACEBOOK)
         }
 
         // Generate tokens

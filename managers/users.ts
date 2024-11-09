@@ -6,6 +6,8 @@ import { Types } from 'mongoose';
 import * as jwt from "jsonwebtoken";
 import { randomStr } from '../config/utils';
 import { AUTH_TYPE_CHOICES } from '../models/choices';
+import FB from "fb";
+import axios from 'axios';
 
 const hashPassword = async (password: string) => {
     const hashedPassword: string = await bcrypt.hash(password, 10) 
@@ -100,8 +102,30 @@ const validateGoogleToken = async (authToken: string): Promise<Record<string,any
 
         const payload = ticket.getPayload();
         if (!payload || !payload['sub']) {
-            return { user: null, error: 'Invalid Auth Token' };
+            return { payload: null, error: 'Invalid Auth Token' };
         }
+        return { payload, error: null };
+    } catch (error) {
+        return { payload: null, error: 'Invalid Auth Token' };
+    }
+}
+
+const validateFacebookToken = async (authToken: string): Promise<Record<string,any>> => {
+    try {
+        // Validate token by checking against the app ID
+        const appResponse = await axios.get(`https://graph.facebook.com/app`, {
+            params: { access_token: authToken }
+        });
+        if (parseInt(appResponse.data.id) !== ENV.FACEBOOK_APP_ID) return { user: null, error: "Invalid Auth Token" };
+        // Fetch user profile with name, email, and profile picture URL only
+        const profileResponse = await axios.get("https://graph.facebook.com/me", {
+            params: {
+                access_token: authToken,
+                fields: "id,name,email,picture.type(large){url}"
+            }
+        });
+        const data = profileResponse.data
+        const payload = { name: data.name, email: data.email, picture: data.picture.data.url }
         return { payload, error: null };
     } catch (error) {
         return { payload: null, error: 'Invalid Auth Token' };
@@ -112,4 +136,4 @@ const shortUserPopulation = (field: string): any => {
     return {path: field, select: "name avatar"}
 }
 
-export { createUser, createOtp, hashPassword, checkPassword, createAccessToken, createRefreshToken, verifyRefreshToken, decodeAuth, validateGoogleToken, shortUserPopulation };
+export { createUser, createOtp, hashPassword, checkPassword, createAccessToken, createRefreshToken, verifyRefreshToken, decodeAuth, validateGoogleToken, validateFacebookToken, shortUserPopulation };

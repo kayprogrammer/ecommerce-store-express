@@ -97,13 +97,13 @@ const loginDocs = {
     }
 };
 
-const GOOGLE_LOGIN_401 = generateSwaggerResponseExample('Invalid Token', FAILURE_STATUS, "Invalid Token!", null, ErrorCode.INVALID_TOKEN)
-const GOOGLE_LOGIN_WITH_INVALID_ACCOUNT_401 = {
-    ...GOOGLE_LOGIN_401,
+const SOCIAL_LOGIN_401 = generateSwaggerResponseExample('Invalid Token', FAILURE_STATUS, "Invalid Token!", null, ErrorCode.INVALID_TOKEN)
+const SOCIAL_LOGIN_WITH_INVALID_ACCOUNT_401 = {
+    ...SOCIAL_LOGIN_401,
     content: {
         'application/json': {
             examples: {
-                example1: GOOGLE_LOGIN_401.content["application/json"].examples.example1,
+                example1: SOCIAL_LOGIN_401.content["application/json"].examples.example1,
                 example2: generateSwaggerExampleValue("Invalid Auth", FAILURE_STATUS, "Requires password to sign in to this account", null, ErrorCode.INVALID_AUTH),
             },
         },
@@ -119,7 +119,22 @@ const googleLoginDocs = {
         responses: {
             201: generateSwaggerResponseExample('Login Successful response', SUCCESS_STATUS, "Login successful", TokensSchema),
             422: ERROR_EXAMPLE_422,
-            401: GOOGLE_LOGIN_WITH_INVALID_ACCOUNT_401,
+            401: SOCIAL_LOGIN_WITH_INVALID_ACCOUNT_401,
+            500: ERROR_EXAMPLE_500
+        }
+    }
+}
+
+const facebookLoginDocs = {
+    post: {
+        tags: tags,
+        summary: 'Login via facebook',
+        description: `Generates access and refresh tokens for the user based on facebook auth token.`,
+        requestBody: generateSwaggerRequestExample("Login", TokenSchema),
+        responses: {
+            201: generateSwaggerResponseExample('Login Successful response', SUCCESS_STATUS, "Login successful", TokensSchema),
+            422: ERROR_EXAMPLE_422,
+            401: SOCIAL_LOGIN_WITH_INVALID_ACCOUNT_401,
             500: ERROR_EXAMPLE_500
         }
     }
@@ -168,4 +183,4 @@ const logoutAllDocs = {
     }
 };
 
-export { registerDocs, verifyEmailDocs, resendVerificationEmailDocs, passwordResetRequestEmailDocs, passwordResetDocs, loginDocs, googleLoginDocs, refreshTokenDocs, logoutDocs, logoutAllDocs }
+export { registerDocs, verifyEmailDocs, resendVerificationEmailDocs, passwordResetRequestEmailDocs, passwordResetDocs, loginDocs, googleLoginDocs, facebookLoginDocs, refreshTokenDocs, logoutDocs, logoutAllDocs }
