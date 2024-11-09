@@ -217,6 +217,44 @@ describe("Testing User Authentication Flow", () => {
         });
     });
 
+    it("should login existing users via facebook", async () => {
+        // Mock google auth
+        const validateGoogleTokenMock = jest
+            .spyOn(userManager, 'validateFacebookToken')
+            .mockResolvedValue({
+                payload: {
+                    name: 'Mocked Facebook User',
+                    email: 'mocked@example.com',
+                    picture: "https://mocked-avatar.com"
+                },
+                error: null
+            });
+
+        const response = await requestApp.post(`${baseUrl}/facebook`).send({ token: "token" });
+        expect(response.statusCode).toBe(201);
+        expect(response.body).toMatchObject({
+            status: "success",
+            message: "Login successful",
+            data: { 
+                user: expect.any(Object),
+                access: expect.any(String), 
+                refresh: expect.any(String),
+            }
+        });
+        // Restore the original function after test
+        validateGoogleTokenMock.mockRestore();
+    });
+
+    it("should validate facebook token", async () => {
+        const response = await requestApp.post(`${baseUrl}/facebook`).send({ token: "token" });
+        expect(response.statusCode).toBe(401);
+        expect(response.body).toMatchObject({
+            status: "failure",
+            message: "Invalid Auth Token",
+            code: ErrorCode.INVALID_TOKEN
+        });
+    });
+
     it("should refresh user tokens", async () => {
         const tokens = await testTokens(user)
         const response = await requestApp.post(`${baseUrl}/refresh`).send({
