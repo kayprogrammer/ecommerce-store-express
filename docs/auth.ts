@@ -89,7 +89,7 @@ const loginDocs = {
         description: `Generates access and refresh tokens for the user based on login credentials.`,
         requestBody: generateSwaggerRequestExample("Login", LoginSchema),
         responses: {
-            200: generateSwaggerResponseExample('Login Successful response', SUCCESS_STATUS, "Login successful", TokensSchema),
+            201: generateSwaggerResponseExample('Login Successful response', SUCCESS_STATUS, "Login successful", TokensSchema),
             422: ERROR_EXAMPLE_422,
             401: LOGIN_401,
             500: ERROR_EXAMPLE_500

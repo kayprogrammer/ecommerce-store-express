@@ -1,5 +1,6 @@
 import { facebookLoginDocs, googleLoginDocs, loginDocs, logoutAllDocs, logoutDocs, passwordResetDocs, passwordResetRequestEmailDocs, refreshTokenDocs, registerDocs, resendVerificationEmailDocs, verifyEmailDocs } from "./auth"
 import { siteDetailDocs } from "./general"
+import { profileDocs } from "./profiles"
 
 export const SWAGGER_PATHS = {
     // General routes
@@ -19,4 +20,5 @@ export const SWAGGER_PATHS = {
     '/auth/logout/all': logoutAllDocs,
 
     // Profiles routes
+    '/profiles': profileDocs,
 }

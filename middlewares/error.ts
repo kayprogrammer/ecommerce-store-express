@@ -3,6 +3,7 @@ import { ClassConstructor, plainToInstance } from "class-transformer";
 import { validate, ValidationError } from 'class-validator';
 import { ErrorCode, RequestError } from "../config/handlers"
 import { CustomResponse } from "../config/utils"
+import multer from "multer";
 
 export const validationMiddleware = <T extends object>(type: ClassConstructor<T>) =>
     async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -33,11 +34,16 @@ export const validationMiddleware = <T extends object>(type: ClassConstructor<T>
  * @param next - The next middleware function
  */
 export const handleError = (err: RequestError, req: Request, res: Response, next: NextFunction) => {
-    const status = err.status || 500;
-    const code = err.code || ErrorCode.SERVER_ERROR;
+    let status = err.status || 500;
+    let code = err.code || ErrorCode.SERVER_ERROR;
     const message = err.message || 'Something went wrong';
-    const data = err.data || null;
-
+    let data = err.data || null;
+    if (code === "LIMIT_FILE_SIZE") {
+        code = ErrorCode.INVALID_ENTRY
+        status = 422
+        const fieldName = (err as multer.MulterError).field || 'file';
+        data = { [fieldName]: message }
+    }
     // Format the error response
     const errorResponse = {
         status: 'failure',

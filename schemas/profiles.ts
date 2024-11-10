@@ -1,6 +1,7 @@
 import { Expose } from "class-transformer";
 import { ACCOUNT_TYPE_CHOICES, AUTH_TYPE_CHOICES } from "../models/choices";
 import { Example } from "./utils";
+import { IsNotEmpty, Length } from "class-validator";
 
 export class ProfileSchema {
     @Example("John Doe")
@@ -11,10 +12,6 @@ export class ProfileSchema {
     @Expose()
     email?: string;
 
-    @Example("+234123456778")
-    @Expose()
-    phone?: string;
-    
     @Example("https://johndoe-avatar.com")
     @Expose()
     avatar?: string;
@@ -30,8 +27,16 @@ export class ProfileSchema {
     @Example(ACCOUNT_TYPE_CHOICES.BUYER)
     @Expose()
     accountType?: string;
+}
 
-    @Example("Nigeria")
+export class ProfileEditSchema {
+    @Example("John Doe")
     @Expose()
-    country?: string;
+    @Length(3, 500)
+    @IsNotEmpty()
+    name?: string;
+
+    @Example("profile.jpg")
+    @Expose()
+    avatar?: Buffer;
 }

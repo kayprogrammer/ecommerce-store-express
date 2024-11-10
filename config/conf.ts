@@ -14,7 +14,7 @@ const envSchema = z.object({
   REFRESH_TOKEN_EXPIRE_MINUTES: z.string().transform(Number),
   EMAIL_OTP_EXPIRE_SECONDS: z.string().transform(Number),
   CLOUDINARY_CLOUD_NAME: z.string(),
-  CLOUDINARY_API_KEY: z.string().transform(Number),
+  CLOUDINARY_API_KEY: z.string(),
   CLOUDINARY_API_SECRET: z.string(),
   EMAIL_HOST: z.string(),
   EMAIL_HOST_USER: z.string().email(),

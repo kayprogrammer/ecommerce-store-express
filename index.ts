@@ -7,6 +7,7 @@ import connectDB from './config/db';
 import authRouter from './routes/auth';
 import { handleError } from './middlewares/error';
 import generalRouter from './routes/general';
+import profilesRouter from './routes/profiles';
 
 // CORS options
 const corsOptions: CorsOptions = {
@@ -63,6 +64,7 @@ const swaggerDocument = {
 // Register Routes
 app.use("/api/v2/general", generalRouter)
 app.use("/api/v2/auth", authRouter)
+app.use("/api/v2/profiles", profilesRouter)
 
 app.use(handleError)
 app.use('/', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
