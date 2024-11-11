@@ -25,8 +25,7 @@ profilesRouter.post('', authMiddleware, upload.single("avatar"), validationMiddl
         const user = req.user
         const { name } = req.body;
         if (req.file) {
-            const cloudinaryUrl = await uploadImageToCloudinary(req.file.buffer, "avatar")
-            user.avatar = cloudinaryUrl
+            user.avatar = await uploadImageToCloudinary(req.file.buffer, "avatar")
         }
         user.name = name
         await user.save()
