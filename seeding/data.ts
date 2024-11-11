@@ -5,7 +5,7 @@ import { User } from "../models/accounts"
 import SiteDetail from "../models/general"
 import connectDB from "../config/db"
 import { Country } from 'country-state-city';
-import { Country as CountryModel } from "../models/shop"
+import { Country as CountryModel } from "../models/profiles"
 
 const createSuperuser = async () => {
     let userDoc = { email: ENV.FIRST_SUPERUSER_EMAIL, password: ENV.FIRST_SUPERUSER_PASSWORD, name: "Test Admin" }

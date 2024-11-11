@@ -20,12 +20,8 @@ export class UserSchema {
     name?: string
 
     @Expose()
-    @Example("john-doe")
-    username?: string
-
-    @Expose()
-    @Example("https://img.com/john")
-    avatarUrl?: string
+    @Example("https://img.com/john-doe")
+    avatar?: string
 }
 
 export class FileUploadDataSchema {
