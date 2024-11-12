@@ -1,12 +1,13 @@
 import { NextFunction, Request, Response, Router } from "express";
 import { validationMiddleware } from "../middlewares/error";
-import { CountrySchema, ProfileEditSchema, ProfileSchema, ShippingAddressCreateSchema, ShippingAddressSchema } from "../schemas/profiles";
+import { CountrySchema, ProfileEditSchema, ProfileSchema, ShippingAddressInputSchema, ShippingAddressSchema } from "../schemas/profiles";
 import { authMiddleware } from "../middlewares/auth";
 import { upload, uploadImageToCloudinary } from "../config/file_processor";
-import { CustomResponse } from "../config/utils";
-import { Country, ShippingAddress } from "../models/profiles";
+import { CustomResponse, setDictAttr } from "../config/utils";
+import { Country, IShippingAddress, ShippingAddress } from "../models/profiles";
 import { NotFoundError, ValidationErr } from "../config/handlers";
 import { shortUserPopulation } from "../managers/users";
+import { Types } from "mongoose";
 
 const profilesRouter = Router();
 
@@ -16,7 +17,11 @@ const profilesRouter = Router();
  * @returns {Response} - JSON response with success message.
  */
 profilesRouter.get('', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
-    return res.status(200).json(CustomResponse.success("Profile Retrieved Successfully", req.user, ProfileSchema));
+    try {
+        return res.status(200).json(CustomResponse.success("Profile Retrieved Successfully", req.user, ProfileSchema));
+    } catch (error) {
+        next(error)
+    }
 });
 
 /**
@@ -50,8 +55,12 @@ profilesRouter.post('', authMiddleware, upload.single("avatar"), validationMiddl
  * @returns {Response} - JSON response with success message.
  */
 profilesRouter.get('/countries', async (req: Request, res: Response, next: NextFunction) => {
-    const countries = await Country.find()
-    return res.status(200).json(CustomResponse.success("Countries Retrieved Successfully", countries, CountrySchema));
+    try {
+        const countries = await Country.find()
+        return res.status(200).json(CustomResponse.success("Countries Retrieved Successfully", countries, CountrySchema));
+    } catch (error) {
+        next(error)
+    }
 });
 
 /**
@@ -60,19 +69,23 @@ profilesRouter.get('/countries', async (req: Request, res: Response, next: NextF
  * @returns {Response} - JSON response with success message.
  */
 profilesRouter.get('/addresses', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
-    const user = req.user
-    const addresses = await ShippingAddress.find({ user: user._id }).populate([shortUserPopulation("user"), "country_"])
-    return res.status(200).json(CustomResponse.success("Shipping Addresses Retrieved Successfully", addresses, ShippingAddressSchema));
+    try {
+        const user = req.user
+        const addresses = await ShippingAddress.find({ user: user._id }).populate([shortUserPopulation("user"), "country_"])
+        return res.status(200).json(CustomResponse.success("Shipping Addresses Retrieved Successfully", addresses, ShippingAddressSchema));
+    } catch (error) {
+        next(error)
+    }
 });
 
 /**
  * @route POST /addresses
  * @description Creates a shipping address.
  */
-profilesRouter.post('/addresses', authMiddleware, validationMiddleware(ShippingAddressCreateSchema), async (req: Request, res: Response, next: NextFunction) => {
+profilesRouter.post('/addresses', authMiddleware, validationMiddleware(ShippingAddressInputSchema), async (req: Request, res: Response, next: NextFunction) => {
     try {
         const user = req.user
-        const data: ShippingAddressCreateSchema = req.body
+        const data: ShippingAddressInputSchema = req.body
         const country = await Country.findOne({ _id: data.countryId })
         if (!country) throw new ValidationErr("countryId", "No country with that ID")
         delete data.countryId
@@ -87,6 +100,65 @@ profilesRouter.post('/addresses', authMiddleware, validationMiddleware(ShippingA
                 ShippingAddressSchema
             )    
         )
+    } catch (error) {
+        next(error)
+    }
+});
+
+/**
+ * @route GET /addresses/:id
+ * @description Get a single shipping address of the authenticated user
+ * @returns {Response} - JSON response with success message.
+ */
+profilesRouter.get('/addresses/:id', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user
+        const address = await ShippingAddress.findOne({ user: user._id, _id: req.params.id }).populate([shortUserPopulation("user"), "country_"])
+        if(!address) throw new NotFoundError("User has no shipping address with that ID");
+        return res.status(200).json(CustomResponse.success("Shipping Address Retrieved Successfully", address, ShippingAddressSchema));
+    } catch (error) {
+        next(error)
+    }
+});
+
+/**
+ * @route PUT /addresses/:id
+ * @description Update a single shipping address of the authenticated user
+ * @returns {Response} - JSON response with success message.
+ */
+profilesRouter.put('/addresses/:id', authMiddleware, validationMiddleware(ShippingAddressInputSchema), async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user
+        let address = await ShippingAddress.findOne({ user: user._id, _id: req.params.id })
+        if(!address) throw new NotFoundError("User has no shipping address with that ID")
+
+        const data = req.body
+        const country = await Country.findOne({ _id: data.countryId })
+        if (!country) throw new ValidationErr("countryId", "No country with that ID")
+        delete data.countryId
+        data.country_ = country
+        address = setDictAttr(data, address) as IShippingAddress
+        await address.save()
+        address.user = user
+        address.country_ = country
+        return res.status(200).json(CustomResponse.success("Shipping Address Updated Successfully", address, ShippingAddressSchema));
+    } catch (error) {
+        next(error)
+    }
+});
+
+/**
+ * @route DELETE /addresses/:id
+ * @description Deletes a single shipping address of the authenticated user
+ * @returns {Response} - JSON response with success message.
+ */
+profilesRouter.delete('/addresses/:id', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user
+        const address = await ShippingAddress.findOne({ user: user._id, _id: req.params.id })
+        if(!address) throw new NotFoundError("User has no shipping address with that ID")
+        await address.deleteOne()
+        return res.status(200).json(CustomResponse.success("Shipping Address Deleted Successfully"));
     } catch (error) {
         next(error)
     }

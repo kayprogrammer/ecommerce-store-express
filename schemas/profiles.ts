@@ -63,6 +63,10 @@ export class ShippingAddressSchema {
     user?: UserSchema;
 
     @Expose()
+    @Example(ID_EXAMPLE)
+    id?: string;
+
+    @Expose()
     @Example("John Doe")
     name?: string;
 
@@ -95,7 +99,7 @@ export class ShippingAddressSchema {
     zipcode?: number;   
 }
 
-export class ShippingAddressCreateSchema {
+export class ShippingAddressInputSchema {
     @Expose()
     @Example("John Doe")
     @IsNotEmpty()
