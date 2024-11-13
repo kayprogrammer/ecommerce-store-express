@@ -27,7 +27,7 @@ interface IShippingAddress extends IBase {
     address: string;
     city: string;
     state: string;
-    country_: ICountry;
+    country_: Types.ObjectId | ICountry;
     country: string;
     zipcode: number;
 }

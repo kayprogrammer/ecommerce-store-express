@@ -11,4 +11,11 @@ enum AUTH_TYPE_CHOICES {
     FACEBOOK = "Facebook",
 }
 
-export { AUTH_TYPE_CHOICES, ACCOUNT_TYPE_CHOICES }
+enum BUSINESS_TYPE_CHOICES {
+    SOLE_PROPRIETORSHIP = "Sole Proprietorship",
+    LLC = "Limited Liability Company (LLC)",
+    CORPORATION = "Corporation",
+    PARTNERSHIP = "Partnership"
+}
+
+export { AUTH_TYPE_CHOICES, ACCOUNT_TYPE_CHOICES, BUSINESS_TYPE_CHOICES }
