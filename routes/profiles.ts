@@ -7,7 +7,6 @@ import { CustomResponse, setDictAttr } from "../config/utils";
 import { Country, IShippingAddress, ShippingAddress } from "../models/profiles";
 import { NotFoundError, ValidationErr } from "../config/handlers";
 import { shortUserPopulation } from "../managers/users";
-import { Types } from "mongoose";
 
 const profilesRouter = Router();
 
