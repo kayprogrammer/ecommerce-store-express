@@ -8,12 +8,14 @@ import { COLOR_CHOICES, SIZE_CHOICES } from "./choices";
 interface ICategory extends IBase {
     name: string; 
     slug: string;
+    image: string;
 }
 
 // Create the Category schema
 const CategorySchema = new Schema<ICategory>({
     name: { type: String, required: true, maxlength: 500 },
     slug: { type: String, maxlength: 1000 },
+    image: { type: String },
 }, { timestamps: true });
 
 const Category = model<ICategory>('Category', CategorySchema);
