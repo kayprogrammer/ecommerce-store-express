@@ -82,4 +82,23 @@ enum SIZE_CHOICES {
     XL = "XL",
 }
 
-export { AUTH_TYPE_CHOICES, ACCOUNT_TYPE_CHOICES, BUSINESS_TYPE_CHOICES, COLOR_CHOICES, SIZE_CHOICES }
+enum FILE_SIZE_CHOICES {
+    PROFILE = 2 * 1024 * 1024, // 2MB
+    PRODUCT = PROFILE, // 2MB
+    ID = 1 * 1024 * 1024 // 1MB
+}
+
+const FILE_TYPE_CHOICES = {
+    IMAGE: ['image/jpeg', 'image/png'],
+    DOC: ["application/pdf"]
+}
+
+enum FILE_FOLDER_CHOICES {
+    AVATAR = "avatars",
+    PRODUCT = "products",
+    ID = "ids",
+    RESUME = "resumes"
+}
+
+
+export { AUTH_TYPE_CHOICES, ACCOUNT_TYPE_CHOICES, BUSINESS_TYPE_CHOICES, COLOR_CHOICES, SIZE_CHOICES, FILE_SIZE_CHOICES, FILE_TYPE_CHOICES, FILE_FOLDER_CHOICES }

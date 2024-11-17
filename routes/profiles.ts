@@ -2,11 +2,12 @@ import { NextFunction, Request, Response, Router } from "express";
 import { validationMiddleware } from "../middlewares/error";
 import { CountrySchema, ProfileEditSchema, ProfileSchema, ShippingAddressInputSchema, ShippingAddressSchema } from "../schemas/profiles";
 import { authMiddleware } from "../middlewares/auth";
-import { upload, uploadImageToCloudinary } from "../config/file_processor";
+import { upload, uploadFileToCloudinary } from "../config/file_processor";
 import { CustomResponse, setDictAttr } from "../config/utils";
 import { Country, IShippingAddress, ShippingAddress } from "../models/profiles";
 import { NotFoundError, ValidationErr } from "../config/handlers";
 import { shortUserPopulation } from "../managers/users";
+import { FILE_FOLDER_CHOICES, FILE_SIZE_CHOICES } from "../models/choices";
 
 const profilesRouter = Router();
 
@@ -27,12 +28,15 @@ profilesRouter.get('', authMiddleware, async (req: Request, res: Response, next:
  * @route POST /
  * @description Updates a user's profile.
  */
-profilesRouter.post('', authMiddleware, upload.single("avatar"), validationMiddleware(ProfileEditSchema), async (req: Request, res: Response, next: NextFunction) => {
+profilesRouter.post('', authMiddleware, upload([{ name: "avatar", maxCount: 1 }], {}, {}), validationMiddleware(ProfileEditSchema), async (req: Request, res: Response, next: NextFunction) => {
     try {
         const user = req.user
         const { name } = req.body;
-        if (req.file) {
-            user.avatar = await uploadImageToCloudinary(req.file.buffer, "avatar")
+        const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+        const avatarFile = files.avatar?.[0];
+
+        if (avatarFile) {
+            user.avatar = await uploadFileToCloudinary(avatarFile.buffer, FILE_FOLDER_CHOICES.AVATAR)
         }
         user.name = name
         await user.save()

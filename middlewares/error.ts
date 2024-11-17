@@ -39,6 +39,9 @@ export const handleError = (err: RequestError, req: Request, res: Response, next
     const message = err.message || 'Something went wrong';
     let data = err.data || null;
     if (code === "LIMIT_FILE_SIZE") {
+        // This block will ost likely not be necessary since we're now handling the error for this well in the upload middleware
+        // I'll still leave it here for those who uses a straightforward LIMIT_FILE_SIZE in upload.single
+        // You gerrit, if you don't gerrit forgerraboutit. Or send a message 😉
         code = ErrorCode.INVALID_ENTRY
         status = 422
         const fieldName = (err as multer.MulterError).field || 'file';
