@@ -64,9 +64,9 @@ const SellerSchema = new Schema<ISeller>({
     bankRoutingNumber: { type: String, required: true, maxlength: 50 },
     accountHolderName: { type: String, required: true, maxlength: 200 },
 
-    governmentId: { type: String, required: true },
-    proofOfAddress: { type: String, required: true },
-    businessLicense: { type: String, required: true },
+    governmentId: { type: String },
+    proofOfAddress: { type: String },
+    businessLicense: { type: String },
 
     productCategories: [{ type: Schema.Types.ObjectId, required: true }],
 

@@ -7,7 +7,7 @@ import { CustomResponse, setDictAttr } from "../config/utils";
 import { Country, IShippingAddress, ShippingAddress } from "../models/profiles";
 import { NotFoundError, ValidationErr } from "../config/handlers";
 import { shortUserPopulation } from "../managers/users";
-import { FILE_FOLDER_CHOICES, FILE_SIZE_CHOICES } from "../models/choices";
+import { FILE_FOLDER_CHOICES } from "../models/choices";
 
 const profilesRouter = Router();
 

@@ -1,8 +1,8 @@
-import { Expose } from "class-transformer";
+import { Expose, Transform } from "class-transformer";
 import { BUSINESS_TYPE_CHOICES } from "../models/choices";
 import { Example } from "./utils";
 import { ID_EXAMPLE } from "./base";
-import { IsArray, IsEmail, IsEnum, IsMongoId, IsPhoneNumber, IsTaxId, Length, Max, Min } from "class-validator";
+import { IsArray, IsEmail, IsEnum, IsMongoId, IsNumberString, IsPhoneNumber, IsString, IsTaxId, Length, Max, Min } from "class-validator";
 
 
 export class SellerApplicationSchema {
@@ -17,7 +17,7 @@ export class SellerApplicationSchema {
     email?: string;
     
     @Expose()
-    @Example("+23412345678")
+    @Example("+2348112345069")
     @IsPhoneNumber()
     phone?: string;
     
@@ -32,7 +32,7 @@ export class SellerApplicationSchema {
     businessRegistrationNumber?: string;
     
     @Expose()
-    @Example("TX934920494")
+    @Example("12-3456789")
     @IsTaxId()
     taxIdentificationNumber?: string;
     
@@ -63,9 +63,9 @@ export class SellerApplicationSchema {
     
     @Expose()
     @Example(123456)
-    @Min(5)
-    @Max(30)
-    zipcode?: number;
+    @Length(5, 30)
+    @IsNumberString()
+    zipcode?: string;
     
     @Expose()
     @Example("Good Bank")
@@ -88,19 +88,18 @@ export class SellerApplicationSchema {
     accountHolderName?: string;
     
     @Expose()
-    @Example("https://img.url")
     governmentId?: Buffer;
     
     @Expose()
-    @Example("https://img.url")
     proofOfAddress?: Buffer;
     
     @Expose()
-    @Example("https://img.url")
     businessLicense?: Buffer;
     
     @Expose()
     @Example(["clothing"])
+    @Transform(({ value }) => value ? value.split(',') : [], { toClassOnly: true }) // Transform the string to an array
     @IsArray()
+    @IsString({ each: true })
     productCategorySlugs?: string[];
 }

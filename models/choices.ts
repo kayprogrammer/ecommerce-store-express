@@ -97,7 +97,6 @@ enum FILE_FOLDER_CHOICES {
     AVATAR = "avatars",
     PRODUCT = "products",
     ID = "ids",
-    RESUME = "resumes"
 }
 
 

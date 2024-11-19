@@ -12,7 +12,7 @@ const sellerApplicationDocs = {
         security: [{ BearerAuth: [] }],
         requestBody: generateSwaggerRequestExample("Seller Application", SellerApplicationSchema, "multipart/form-data"),
         responses: {
-            200: generateSwaggerResponseExample('Seller Application Successful Response', SUCCESS_STATUS, "Application Successful"),
+            200: generateSwaggerResponseExample('Seller Application Successful Response', SUCCESS_STATUS, "Application Sent Successfully"),
             401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
             422: ERROR_EXAMPLE_422,
             500: ERROR_EXAMPLE_500

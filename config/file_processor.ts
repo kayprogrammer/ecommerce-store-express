@@ -55,7 +55,8 @@ const upload = (fields: { name: string; maxCount: number }[], fileSizeLimits: Re
     };
 };
 
-async function uploadFileToCloudinary(fileBuffer: Buffer, folder: FILE_FOLDER_CHOICES): Promise<string> {
+async function uploadFileToCloudinary(fileBuffer: Buffer, folder: FILE_FOLDER_CHOICES): Promise<string | null> {
+    if (!fileBuffer) return null
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {

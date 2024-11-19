@@ -14,7 +14,7 @@ interface ICategory extends IBase {
 // Create the Category schema
 const CategorySchema = new Schema<ICategory>({
     name: { type: String, required: true, maxlength: 500 },
-    slug: { type: String, maxlength: 1000 },
+    slug: { type: String, unique: true, maxlength: 1000 },
     image: { type: String },
 }, { timestamps: true });
 

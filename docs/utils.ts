@@ -15,7 +15,7 @@ function generateSwaggerExampleFromSchema<T extends object>(cls: new () => T): R
         // If type is Buffer or BinaryData, set it as a binary file
         if (metadataType && metadataType.name === 'Buffer') {
           examples[key] = {
-            example: example,
+            example,
             format: 'binary', // Set file format for Swagger
           };
         } else {
@@ -39,9 +39,11 @@ function generateSwaggerRequestExample<T extends object>(
               schema: {
                   type: 'object',
                   properties: Object.keys(examples).reduce((acc, key) => {
+                    const example = examples[key]
+                    const dataType = example instanceof Array ? "array" : typeof example
                     acc[key] = examples[key].format === 'binary'
                       ? { type: 'string', format: 'binary' } // Specify binary fields
-                      : { type: typeof examples[key], example: examples[key] };
+                      : { type: dataType, example: examples[key] };
                     return acc;
                   }, {} as Record<string, any>),
               },

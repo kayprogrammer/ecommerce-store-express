@@ -6,6 +6,8 @@ import SiteDetail from "../models/general"
 import connectDB from "../config/db"
 import { Country } from 'country-state-city';
 import { Country as CountryModel } from "../models/profiles"
+import { Category } from "../models/shop"
+import slugify from "slugify"
 
 const createSuperuser = async () => {
     let userDoc = { email: ENV.FIRST_SUPERUSER_EMAIL, password: ENV.FIRST_SUPERUSER_PASSWORD, name: "Test Admin" }
@@ -30,6 +32,20 @@ const createCountries = async () => {
     } 
 }
 
+const createProductCategories = async () => {
+    const CATEGORIES = [
+        "Clothing", "Skin care", "Gadgets", "Shoes",
+        "Cars", "Appliances", "Jewelry", "Stationery",
+    ]
+    if (!(await Category.exists({}))) {
+        const categoryDocs = CATEGORIES.map(c => ({
+            name: c,
+            slug: slugify(c, { lower: true })
+        }));
+        await Category.insertMany(categoryDocs);
+    } 
+}
+
 const createData = async () => {
     console.log("GENERATING INITIAL DATA....")
     await connectDB()
@@ -37,6 +53,7 @@ const createData = async () => {
     await createReviewer()
     await SiteDetail.getOrCreate({})
     await createCountries()
+    await createProductCategories()
     mongoose.disconnect()
     console.log("INITIAL DATA GENERATED....")
 }
