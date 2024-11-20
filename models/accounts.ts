@@ -1,6 +1,7 @@
 import { Schema, model } from 'mongoose';
 import { IBase } from './base';
 import { ACCOUNT_TYPE_CHOICES, AUTH_TYPE_CHOICES } from './choices';
+import { ISeller } from './sellers';
 
 // Define the Token interface
 interface IToken {
@@ -22,6 +23,7 @@ interface IUser extends IBase {
   tokens: IToken[];
   otp: number;
   otpExpiry: Date; 
+  seller: ISeller
 }
 
 // Create the User schema

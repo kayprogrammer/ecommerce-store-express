@@ -1,13 +1,14 @@
 import { NextFunction, Request, Response, Router } from "express";
-import { authMiddleware } from "../middlewares/auth";
+import { authMiddleware, sellerMiddleware } from "../middlewares/auth";
 import { upload, uploadFileToCloudinary } from "../config/file_processor";
 import { validationMiddleware } from "../middlewares/error";
 import { SellerApplicationSchema } from "../schemas/sellers";
 import { FILE_FOLDER_CHOICES, FILE_SIZE_CHOICES } from "../models/choices";
 import { CustomResponse, setDictAttr } from "../config/utils";
 import { ISeller, Seller } from "../models/sellers";
-import { Category } from "../models/shop";
+import { Category, Product } from "../models/shop";
 import { ValidationErr } from "../config/handlers";
+import { paginateModel } from "../config/paginators";
 
 const sellerRouter = Router();
 
@@ -57,6 +58,23 @@ sellerRouter.post('/application',
         } catch (error) {
             next(error)
         }
+});
+
+/**
+ * @route GET /products
+ * @description Return all products belonging to a seller.
+ */
+sellerRouter.get('/products', sellerMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user
+        const seller = user.seller
+
+        const products = await Product.find({ seller: seller._id }) 
+        const data = paginateModel(req, Product, { seller: seller._id,  }, ["seller", "category"])
+        return res.status(200).json(CustomResponse.success('Application Sent Successfully'))
+    } catch (error) {
+        next(error)
+    }
 });
 
 export default sellerRouter;

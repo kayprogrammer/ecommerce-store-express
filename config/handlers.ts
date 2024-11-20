@@ -16,6 +16,7 @@ export class ErrorCode {
     static readonly NOT_ALLOWED = "not_allowed";
     static readonly INVALID_DATA_TYPE = "invalid_data_type";
     static readonly ADMINS_ONLY = "admins_only";
+    static readonly SELLERS_ONLY = "sellers_only";
     static readonly BAD_REQUEST = "bad_request";
     static readonly UNPROCESSABLE_ENTITY = "unprocessable_entity";
 }
@@ -51,8 +52,8 @@ export class ValidationErr extends RequestError {
 
 // Other specific error classes can also use ErrorCode constants
 export class UnauthorizedError extends RequestError {
-    constructor(message: string) {
-        super(message, 401, ErrorCode.UNAUTHORIZED_USER);
+    constructor(message: string, code: string = ErrorCode.UNAUTHORIZED_USER) {
+        super(message, 401, code);
     }
 }
 
