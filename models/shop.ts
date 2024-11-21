@@ -57,8 +57,8 @@ const ProductSchema = new Schema<IProduct>({
     },
 
     variants: [{ 
-        size: { type: String, required: false }, 
-        color: { type: String, required: false },
+        size: { type: String, enum: SIZE_CHOICES, required: false }, 
+        color: { type: String, enum: COLOR_CHOICES, required: false },
         stock: { type: Number, default: 1 },
         image: { type: String, required: false },
     }],

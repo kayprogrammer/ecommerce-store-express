@@ -1,18 +1,33 @@
 import mongoose from "mongoose"
 import ENV from "../config/conf"
 import { createUser } from "../managers/users"
-import { User } from "../models/accounts"
+import { IUser, User } from "../models/accounts"
 import SiteDetail from "../models/general"
 import connectDB from "../config/db"
 import { Country } from 'country-state-city';
-import { Country as CountryModel } from "../models/profiles"
-import { Category } from "../models/shop"
+import { Country as CountryModel, ICountry } from "../models/profiles"
+import { Category, ICategory, IProduct, Product } from "../models/shop"
 import slugify from "slugify"
+import seedData from "./seed.json"
+import { ISeller, Seller } from "../models/sellers"
+import * as path from "path";
+import * as fs from "fs";
+import { uploadFileToCloudinary } from "../config/file_processor"
+import { FILE_FOLDER_CHOICES } from "../models/choices"
+import { getRandomItem } from "../config/utils"
 
-const createSuperuser = async () => {
+// Define base directory
+const CURRENT_DIR = path.resolve(__dirname);
+// Define image directories
+const testImagesDirectory = path.join(CURRENT_DIR, "images");
+const testCategoryImagesDirectory = path.join(testImagesDirectory, "categories");
+const testProductImagesDirectory = path.join(testImagesDirectory, "products");
+
+const createSuperuser = async (): Promise<IUser> => {
     let userDoc = { email: ENV.FIRST_SUPERUSER_EMAIL, password: ENV.FIRST_SUPERUSER_PASSWORD, name: "Test Admin" }
-    const existingUser = await User.findOne({ email: userDoc.email })
-    if (!existingUser) await createUser(userDoc, true)
+    let user = await User.findOne({ email: userDoc.email })
+    if (!user) user = await createUser(userDoc, true)
+    return user
 }
 
 const createReviewer = async () => {
@@ -21,39 +36,90 @@ const createReviewer = async () => {
     if (!existingUser) await createUser(userDoc, true)
 }
 
-const createCountries = async () => {
-    if (!(await CountryModel.exists({}))) {
-        const countries = Country.getAllCountries();
-        const countryDocs = countries.map(c => ({
+const createCountries = async (): Promise<ICountry[]> => {
+    let countries = await CountryModel.find().select("_id")
+    if (countries.length < 1) {
+        const countriesData = Country.getAllCountries();
+        const countryDocs = countriesData.map(c => ({
             name: c.name,
             code: c.isoCode,
         }));
-        await CountryModel.insertMany(countryDocs);
+        countries = await CountryModel.insertMany(countryDocs);
     } 
+    return countries
 }
 
-const createProductCategories = async () => {
-    const CATEGORIES = [
-        "Clothing", "Skin care", "Gadgets", "Shoes",
-        "Cars", "Appliances", "Jewelry", "Stationery",
-    ]
-    if (!(await Category.exists({}))) {
-        const categoryDocs = CATEGORIES.map(c => ({
-            name: c,
-            slug: slugify(c, { lower: true })
-        }));
-        await Category.insertMany(categoryDocs);
+const createProductCategories = async (): Promise<ICategory[]> => {
+    let categories = await Category.find().select("_id")
+    if (categories.length < 1) {
+        if (fs.existsSync(testCategoryImagesDirectory)) {
+            const images = fs.readdirSync(testCategoryImagesDirectory);
+            const categoryDocs = await Promise.all(images.map(async (image, index) => {
+                // Upload image
+                const imagePath = path.join(testCategoryImagesDirectory, image);
+                const imageBuffer = fs.readFileSync(imagePath)
+                const imageUrl = await uploadFileToCloudinary(imageBuffer, FILE_FOLDER_CHOICES.CATEGORY);
+
+                // Prepare category data
+                const categoryName = seedData.categories[index];
+                return {
+                    name: categoryName,
+                    slug: slugify(categoryName, { lower: true }),
+                    image: imageUrl as string
+                };
+            }));
+            categories = await Category.insertMany(categoryDocs);
+        } else {
+            console.log(`Directory ${testProductImagesDirectory} does not exist.`);
+        }
     } 
+    return categories
+}
+
+const createProducts = async (seller: ISeller, categories: ICategory[]): Promise<IProduct[]> => {
+    let products: IProduct[] = await Product.find().select("_id")
+    if (products.length < 1) {
+        if (fs.existsSync(testProductImagesDirectory)) {
+            const images = fs.readdirSync(testProductImagesDirectory);
+
+            const productDocs = await Promise.all(images.map(async (image, index) => {
+                // Upload image
+                const imagePath = path.join(testProductImagesDirectory, image);
+                const imageBuffer = fs.readFileSync(imagePath)
+                const imageUrl = await uploadFileToCloudinary(imageBuffer, FILE_FOLDER_CHOICES.PRODUCT);
+
+                const category = getRandomItem(categories)
+                const productName = seedData.products[index]
+                return {
+                    seller: seller._id, name: productName, slug:  slugify(productName, { lower: true }),
+                    category: category._id, desc: "This is a good product", priceOld: (index + 1) * 50,
+                    priceCurrent: (index + 1) * 45, generalStock: (index + 1) * 20, image1: imageUrl 
+                };
+            }));
+            products = await Product.insertMany(productDocs) as IProduct[]
+        } else {
+            console.log(`Directory ${testProductImagesDirectory} does not exist.`);
+        }
+    } 
+    return products
+}
+
+const createSeller = async (admin: IUser, country: ICountry, category: ICategory): Promise<ISeller> => {
+    let seller = await Seller.findOne({ user: admin._id })
+    if (!seller) seller = await Seller.create({ user: admin._id, country_: country._id, productCategories: [category._id], ...seedData.seller })
+    return seller
 }
 
 const createData = async () => {
     console.log("GENERATING INITIAL DATA....")
     await connectDB()
-    await createSuperuser()
+    const admin = await createSuperuser()
     await createReviewer()
     await SiteDetail.getOrCreate({})
-    await createCountries()
-    await createProductCategories()
+    const countries = await createCountries()
+    const categories = await createProductCategories()
+    const seller = await createSeller(admin, countries[0], categories[0])
+    await createProducts(seller, categories)
     mongoose.disconnect()
     console.log("INITIAL DATA GENERATED....")
 }

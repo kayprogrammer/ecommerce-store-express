@@ -1,0 +1,34 @@
+{
+    "products": [
+        "Light Blue Straight Women Jeans", "Curology skin care for men and women",
+        "Black Ultra HD Camera", "Cool Quality Nike Sneakers", "Tesla Model S", 
+        "LG 2 in 1 Washer (20KG)", "Pair of couple Diamond rings",
+        "Black Notepad and Pen with thick cover"
+    ],
+    "categories": ["Clothing", "Skin care", "Gadgets", "Shoes", "Cars", "Appliances", "Jewelry", "Stationery"],
+    "seller": {
+        "name": "John's Clothings",
+        "email": "john.doe@example.com",
+        "phone": "+2348112345678",
+        "businessType": "Sole Proprietorship",
+        "businessRegistrationNumber": "123456789",
+        "taxIdentificationNumber": "12-3456789",
+        "businessDescription": "We sell fashion accessories and clothing.",
+        "address": "123 Main St",
+        "city": "Lagos",
+        "state": "Lagos",
+        "zipcode": "10001",
+        "bankName": "Example Bank",
+        "bankAccountNumber": "987654321",
+        "bankRoutingNumber": "111000025",
+        "accountHolderName": "John Doe",
+        "governmentId": "https://file.com/government_id",
+        "proofOfAddress": "https://file.com/proof_of_address",
+        "businessLicense": "https://file.com/business_license"
+    },
+    "reviews": [
+        "This is a really good product. I've used it several times and it works",
+        "Ensure you buy this. It has great quality",
+        "This Product is really worth the price."
+    ]
+}

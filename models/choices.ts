@@ -96,6 +96,7 @@ const FILE_TYPE_CHOICES = {
 enum FILE_FOLDER_CHOICES {
     AVATAR = "avatars",
     PRODUCT = "products",
+    CATEGORY = "categories",
     ID = "ids",
 }
 
