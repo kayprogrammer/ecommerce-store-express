@@ -13,7 +13,7 @@ const profilesRouter = Router();
 
 /**
  * @route GET /
- * @description Get the current authenticated user profile
+ * @description Get the current authenticated user profile.
  * @returns {Response} - JSON response with success message.
  */
 profilesRouter.get('', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {

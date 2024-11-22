@@ -2,6 +2,7 @@ import { Expose, Type } from "class-transformer";
 import { Example } from "./utils";
 import { COLOR_CHOICES, SIZE_CHOICES } from "../models/choices";
 import { generateSwaggerExampleFromSchema } from "../docs/utils";
+import { PaginatedResponseSchema } from "./base";
 
 export class SellerSchema {
     @Expose()
@@ -45,7 +46,7 @@ export class VariantSchema {
     stock?: number;
 
     @Expose()
-    @Example("https://image.url/clothing")
+    @Example("https://image.url/shoeee")
     image?: string;
 }
 
@@ -85,9 +86,21 @@ export class ProductSchema {
     generalStock?: number;
 
     @Expose()
-    @Example(generateSwaggerExampleFromSchema(VariantSchema))
+    @Example([generateSwaggerExampleFromSchema(VariantSchema)])
     @Type(() => VariantSchema)
     variants?: VariantSchema[];
+
+    @Expose()
+    @Example(1)
+    reviewsCount?: number;
+
+    @Expose()
+    @Example(1)
+    avgRating?: number;
+
+    @Expose()
+    @Example(true)
+    wishlisted?: boolean;
 
     @Expose()
     @Example("https://image.url/shoes")
@@ -100,4 +113,11 @@ export class ProductSchema {
     @Expose()
     @Example("https://image.url/shoes-side")
     image3?: string;
+}
+
+export class ProductsResponseSchema extends PaginatedResponseSchema {
+    @Expose()
+    @Type(() => ProductSchema)
+    @Example([generateSwaggerExampleFromSchema(ProductSchema)])
+    products?: ProductSchema[]
 }

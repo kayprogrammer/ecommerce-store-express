@@ -1,8 +1,10 @@
-import { model, Schema, Types } from "mongoose";
+import mongoose, { model, Schema, Types } from "mongoose";
 import { IBase } from "./base";
 import { BUSINESS_TYPE_CHOICES } from "./choices";
 import { ICountry } from "./profiles";
 import { IUser } from "./accounts";
+import slugify from "slugify";
+import { generateRandomNumber } from "./utils";
 
 // Define the interface for the Seller model
 interface ISeller extends IBase {
@@ -76,6 +78,30 @@ const SellerSchema = new Schema<ISeller>({
 SellerSchema.virtual('country').get(function(this: ISeller) {
     const countryObj = this.country_ as ICountry
     return countryObj?.name || null;
+});
+
+SellerSchema.virtual('image').get(function(this: ISeller) {
+    const userObj = this.user as IUser
+    return userObj?.avatar || null;
+});
+
+SellerSchema.pre('save', async function (next) {
+    try {
+        if (this.isModified('name') || this.isNew) {
+        // Generate base slug
+        const baseSlug = slugify(this.name, { lower: true, strict: true });
+        let slug = baseSlug
+
+        // Check for uniqueness
+        while (await mongoose.model('Seller').exists({ slug })) {
+            slug = `${baseSlug}-${generateRandomNumber()}`;
+        }
+        this.slug = slug;
+        }
+        next();
+    } catch (error: any) {
+        next(error)
+    }
 });
 
 // Create the Seller model

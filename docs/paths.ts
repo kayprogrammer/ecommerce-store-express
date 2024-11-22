@@ -1,7 +1,7 @@
 import { facebookLoginDocs, googleLoginDocs, loginDocs, logoutAllDocs, logoutDocs, passwordResetDocs, passwordResetRequestEmailDocs, refreshTokenDocs, registerDocs, resendVerificationEmailDocs, verifyEmailDocs } from "./auth"
 import { siteDetailDocs } from "./general"
 import { countriesDocs, profileDocs, shippingAddressDocs, shippingAddressesDocs } from "./profiles"
-import { sellerApplicationDocs } from "./sellers"
+import { sellerApplicationDocs, sellerProductsDocs } from "./sellers"
 
 export const SWAGGER_PATHS = {
     // General routes
@@ -28,4 +28,5 @@ export const SWAGGER_PATHS = {
 
     // Seller routes
     '/sellers/application': sellerApplicationDocs,
+    '/sellers/products/{slug}': sellerProductsDocs,
 }

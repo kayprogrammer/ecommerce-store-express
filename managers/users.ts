@@ -132,8 +132,8 @@ const validateFacebookToken = async (authToken: string): Promise<Record<string,a
     }
 }
 
-const shortUserPopulation = (field: string): any => {
-    return {path: field, select: "name avatar"}
-}
+const shortUserPopulation = (field: string) => ({path: field, select: "name avatar"})
 
-export { createUser, createOtp, hashPassword, checkPassword, createAccessToken, createRefreshToken, verifyRefreshToken, decodeAuth, validateGoogleToken, validateFacebookToken, shortUserPopulation };
+const SELLER_POPULATION = {path: "seller", select: "name slug image", populate: { path: "user", select: "avatar" }}
+
+export { createUser, createOtp, hashPassword, checkPassword, createAccessToken, createRefreshToken, verifyRefreshToken, decodeAuth, validateGoogleToken, validateFacebookToken, shortUserPopulation, SELLER_POPULATION };

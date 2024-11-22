@@ -7,8 +7,10 @@ import { FILE_FOLDER_CHOICES, FILE_SIZE_CHOICES } from "../models/choices";
 import { CustomResponse, setDictAttr } from "../config/utils";
 import { ISeller, Seller } from "../models/sellers";
 import { Category, Product } from "../models/shop";
-import { ValidationErr } from "../config/handlers";
+import { NotFoundError, ValidationErr } from "../config/handlers";
 import { paginateModel } from "../config/paginators";
+import { SELLER_POPULATION } from "../managers/users";
+import { ProductSchema, ProductsResponseSchema } from "../schemas/shop";
 
 const sellerRouter = Router();
 
@@ -61,17 +63,16 @@ sellerRouter.post('/application',
 });
 
 /**
- * @route GET /products
+ * @route GET /products/:slug
  * @description Return all products belonging to a seller.
  */
-sellerRouter.get('/products', sellerMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+sellerRouter.get('/products/:slug', async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const user = req.user
-        const seller = user.seller
-
-        const products = await Product.find({ seller: seller._id }) 
-        const data = paginateModel(req, Product, { seller: seller._id,  }, ["seller", "category"])
-        return res.status(200).json(CustomResponse.success('Application Sent Successfully'))
+        const seller = await Seller.findOne({ slug: req.params.slug, isApproved: true })
+        if (!seller) throw new NotFoundError("No approved seller with that slug")
+        const data = await paginateModel(req, Product, { seller: seller._id,  }, [SELLER_POPULATION, "category"])
+        const productsData = { products: data.items, ...data }
+        return res.status(200).json(CustomResponse.success('Seller Products Fetched Successfully', productsData, ProductsResponseSchema))
     } catch (error) {
         next(error)
     }

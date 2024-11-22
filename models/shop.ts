@@ -2,7 +2,11 @@ import { model, Schema } from "mongoose";
 import { IBase } from "./base";
 import { Types } from "mongoose";
 import { ISeller } from "./sellers";
-import { COLOR_CHOICES, SIZE_CHOICES } from "./choices";
+import { COLOR_CHOICES, RATING_CHOICES, SIZE_CHOICES } from "./choices";
+import { IUser } from "./accounts";
+import slugify from "slugify";
+import mongoose from "mongoose";
+import { generateRandomNumber } from "./utils";
 
 // Define the interface for the Category model
 interface ICategory extends IBase {
@@ -34,6 +38,11 @@ interface IProduct extends IBase {
     image1: string;
     image2: string;
     image3: string;
+
+    reviews: { user: Types.ObjectId | IUser, text: string, rating: RATING_CHOICES }[]
+    reviewsCount: number;
+    avgRating: number;
+    wishlisted: boolean;
 }
   
 // Create the Product schema
@@ -65,8 +74,42 @@ const ProductSchema = new Schema<IProduct>({
     image1: { type: String, required: true },
     image2: { type: String, default: null },
     image3: { type: String, default: null },
+
+    reviews: [{ 
+        user: { type: Schema.Types.ObjectId, ref: 'User' }, 
+        text: { type: String, maxlength: 500 },
+        rating: { type: Number, enum: RATING_CHOICES },
+    }],
 }, { timestamps: true });
   
+ProductSchema.pre('save', async function (next) {
+    try {
+        if (this.isModified('name') || this.isNew) {
+        // Generate base slug
+        const baseSlug = slugify(this.name, { lower: true, strict: true });
+        let slug = baseSlug
+
+        // Check for uniqueness
+        while (await mongoose.model('Product').exists({ slug })) {
+            slug = `${baseSlug}-${generateRandomNumber()}`;
+        }
+        this.slug = slug;
+        }
+        next();
+    } catch (error: any) {
+        next(error)
+    }
+});
+
+ProductSchema.virtual('reviewsCount').get(function(this: IProduct) {
+    return this.reviews.length;
+});
+
+ProductSchema.virtual('avgRating').get(function(this: IProduct) {
+    const reviews = this.reviews
+    return reviews.reduce((sum, item) => sum + (item["rating"] || 0), 0) / reviews.length || 0;
+});
+
 // Create the Product model
 const Product = model<IProduct>('Product', ProductSchema);
 

@@ -93,7 +93,7 @@ const createProducts = async (seller: ISeller, categories: ICategory[]): Promise
                 return {
                     seller: seller._id, name: productName, slug:  slugify(productName, { lower: true }),
                     category: category._id, desc: "This is a good product", priceOld: (index + 1) * 50,
-                    priceCurrent: (index + 1) * 45, generalStock: (index + 1) * 20, image1: imageUrl 
+                    priceCurrent: (index + 1) * 45, generalStock: (index + 1) * 20, image1: imageUrl,
                 };
             }));
             products = await Product.insertMany(productDocs) as IProduct[]
@@ -106,7 +106,7 @@ const createProducts = async (seller: ISeller, categories: ICategory[]): Promise
 
 const createSeller = async (admin: IUser, country: ICountry, category: ICategory): Promise<ISeller> => {
     let seller = await Seller.findOne({ user: admin._id })
-    if (!seller) seller = await Seller.create({ user: admin._id, country_: country._id, productCategories: [category._id], ...seedData.seller })
+    if (!seller) seller = await Seller.create({ user: admin._id, country_: country._id, productCategories: [category._id], isApproved: true, ...seedData.seller })
     return seller
 }
 
