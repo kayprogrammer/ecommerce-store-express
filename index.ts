@@ -9,6 +9,7 @@ import { handleError } from './middlewares/error';
 import generalRouter from './routes/general';
 import profilesRouter from './routes/profiles';
 import sellerRouter from './routes/sellers';
+import shopRouter from './routes/shop';
 
 // CORS options
 const corsOptions: CorsOptions = {
@@ -66,6 +67,7 @@ const swaggerDocument = {
 app.use("/api/v2/general", generalRouter)
 app.use("/api/v2/auth", authRouter)
 app.use("/api/v2/profiles", profilesRouter)
+app.use("/api/v2/shop", shopRouter)
 app.use("/api/v2/sellers", sellerRouter)
 
 app.use(handleError)
