@@ -10,7 +10,9 @@ const sellerApplicationDocs = {
     post: {
         tags,
         summary: 'Seller Application',
-        description: `Allows authenticated users to apply to become a seller`,
+        description: `
+            Allows authenticated users to apply to become a seller
+        `,
         security: [{ BearerAuth: [] }],
         requestBody: generateSwaggerRequestExample("Seller Application", SellerApplicationSchema, "multipart/form-data"),
         responses: {
@@ -28,7 +30,9 @@ const sellerProductsDocs = {
     get: {
         tags,
         summary: 'Products By Seller',
-        description: `Allows anyone to fetch products of a seller`,
+        description: `
+            Allows anyone to fetch products of a seller
+        `,
         parameters: [
             generateParamExample("slug", "Slug of the seller to fetch", "string", "john-clothing", "path"),
             ...generatePaginationParamExample("products")

@@ -2,7 +2,7 @@ import { facebookLoginDocs, googleLoginDocs, loginDocs, logoutAllDocs, logoutDoc
 import { siteDetailDocs } from "./general"
 import { countriesDocs, profileDocs, shippingAddressDocs, shippingAddressesDocs } from "./profiles"
 import { sellerApplicationDocs, sellerProductsDocs } from "./sellers"
-import { productsDocs } from "./shop"
+import { productDocs, productsDocs } from "./shop"
 
 export const SWAGGER_PATHS = {
     // General routes
@@ -29,6 +29,7 @@ export const SWAGGER_PATHS = {
 
     // Shop routes
     '/shop/products': productsDocs,
+    '/shop/products/{slug}': productDocs,
     
     // Seller routes
     '/sellers/application': sellerApplicationDocs,

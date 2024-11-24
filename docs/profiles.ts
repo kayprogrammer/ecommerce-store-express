@@ -10,7 +10,9 @@ const profileDocs = {
     get: {
         tags,
         summary: 'View Profile',
-        description: `Allows authenticated users to view their profile`,
+        description: `
+            Allows authenticated users to view their profile
+        `,
         security: [{ BearerAuth: [] }], // Require BearerAuth for this endpoint
         responses: {
             200: generateSwaggerResponseExample('Profile view successful response', SUCCESS_STATUS, "Profile Retrieved Successfully"),
@@ -21,7 +23,9 @@ const profileDocs = {
     post: {
         tags,
         summary: 'Update Profile',
-        description: `Allows authenticated users to update their profile`,
+        description: `
+            Allows authenticated users to update their profile
+        `,
         security: [{ BearerAuth: [] }],
         requestBody: generateSwaggerRequestExample("Profile", ProfileEditSchema, "multipart/form-data"),
         responses: {
@@ -37,7 +41,9 @@ const countriesDocs = {
     get: {
         tags,
         summary: 'View All Countries',
-        description: `Allows people to view all countries`,
+        description: `
+            Allows people to view all countries
+        `,
         security: [{ BearerAuth: [] }], 
         responses: {
             200: generateSwaggerResponseExample('Countries successful response', SUCCESS_STATUS, "Countries Retrieved Successfully", CountrySchema, null, true),
@@ -50,7 +56,9 @@ const shippingAddressesDocs = {
     get: {
         tags,
         summary: 'View Shipping Addresses',
-        description: `Allows authenticated users to view all their created shipping addresses`,
+        description: `
+            Allows authenticated users to view all their created shipping addresses
+        `,
         security: [{ BearerAuth: [] }], 
         responses: {
             200: generateSwaggerResponseExample('Shipping Addresses successful response', SUCCESS_STATUS, "Shipping Addresses Retrieved Successfully", ShippingAddressSchema, null, true),
@@ -61,7 +69,9 @@ const shippingAddressesDocs = {
     post: {
         tags,
         summary: 'Create Shipping Address',
-        description: `Allows authenticated users to create a shipping address`,
+        description: `
+            Allows authenticated users to create a shipping address
+        `,
         security: [{ BearerAuth: [] }],
         requestBody: generateSwaggerRequestExample("Shipping address", ShippingAddressInputSchema),
         responses: {
@@ -80,7 +90,9 @@ const shippingAddressDocs = {
     get: {
         tags,
         summary: 'View Shipping Address',
-        description: `Allows authenticated users to view a single shipping address`,
+        description: `
+            Allows authenticated users to view a single shipping address
+        `,
         security: [{ BearerAuth: [] }], 
         parameters: [SHIPPING_ID_PARAM],
         responses: {
@@ -93,7 +105,9 @@ const shippingAddressDocs = {
     put: {
         tags,
         summary: 'Update Shipping Address',
-        description: `Allows authenticated users to update a shipping address`,
+        description: `
+            Allows authenticated users to update a shipping address
+        `,
         security: [{ BearerAuth: [] }],
         parameters: [SHIPPING_ID_PARAM],
         requestBody: generateSwaggerRequestExample("Shipping address", ShippingAddressInputSchema),
@@ -109,7 +123,9 @@ const shippingAddressDocs = {
     delete: {
         tags,
         summary: 'Delete Shipping Address',
-        description: `Allows authenticated users to delete a shipping address`,
+        description: `
+            Allows authenticated users to delete a shipping address
+        `,
         security: [{ BearerAuth: [] }],
         parameters: [SHIPPING_ID_PARAM],
         responses: {
