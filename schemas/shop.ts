@@ -1,8 +1,9 @@
 import { Expose, Type } from "class-transformer";
 import { Example } from "./utils";
-import { COLOR_CHOICES, SIZE_CHOICES } from "../models/choices";
+import { COLOR_CHOICES, RATING_CHOICES, SIZE_CHOICES } from "../models/choices";
 import { generateSwaggerExampleFromSchema } from "../docs/utils";
-import { PaginatedResponseSchema } from "./base";
+import { PaginatedResponseSchema, UserSchema } from "./base";
+import { IsEnum, Length } from "class-validator";
 
 export class SellerSchema {
     @Expose()
@@ -120,4 +121,29 @@ export class ProductsResponseSchema extends PaginatedResponseSchema {
     @Type(() => ProductSchema)
     @Example([generateSwaggerExampleFromSchema(ProductSchema)])
     products?: ProductSchema[]
+}
+
+export class ReviewCreateSchema {
+    @Expose()
+    @IsEnum(RATING_CHOICES)
+    @Example(RATING_CHOICES.THREE)
+    rating?: RATING_CHOICES;
+
+    @Expose()
+    @Length(5, 500)
+    @Example("This is the best Product")
+    text?: string;
+}
+
+export class ReviewSchema {
+    @Expose()
+    user?: UserSchema;
+
+    @Expose()
+    @Example(RATING_CHOICES.THREE)
+    rating?: RATING_CHOICES;
+
+    @Expose()
+    @Example("This is the best Product")
+    text?: string;
 }

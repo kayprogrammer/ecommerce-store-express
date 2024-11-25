@@ -1,29 +1,39 @@
 import 'reflect-metadata';
 import { plainToClass } from 'class-transformer';
 
+function isPrimitiveType(metadataType: any): boolean {
+  const primitiveTypes = ['String', 'Number', 'Boolean', 'Date', 'Symbol', 'BigInt', 'Array'];
+  return primitiveTypes.includes(metadataType.name);
+}
+
 function generateSwaggerExampleFromSchema<T extends object>(cls: new () => T): Record<string, any> {
-    const examples: Record<string, any> = {};
-    
-    const instance = plainToClass(cls, {}) as T;
+  const examples: Record<string, any> = {};
   
-    const keys = Object.keys(instance);
-  
-    keys.forEach((key) => {
-      const example = Reflect.getMetadata('example', instance, key);
-      const metadataType = Reflect.getMetadata('design:type', instance, key);
-      if (example !== undefined) {
-        // If type is Buffer or BinaryData, set it as a binary file
-        if (metadataType && metadataType.name === 'Buffer') {
-          examples[key] = {
-            example,
-            format: 'binary', // Set file format for Swagger
-          };
-        } else {
-          examples[key] = example;
-        }
-      }
-    });
-    return examples
+  const instance = plainToClass(cls, {}) as T;
+
+  const keys = Object.keys(instance);
+
+  keys.forEach((key) => {
+    const example = Reflect.getMetadata('example', instance, key);
+    const metadataType = Reflect.getMetadata('design:type', instance, key);
+    // Check if it's a Buffer (binary data)
+    if (metadataType && metadataType.name === 'Buffer') {
+      examples[key] = {
+        example: example,
+        format: 'binary',
+      };
+    } 
+    // Check if it's a class (not a primitive)
+    else if (metadataType && !isPrimitiveType(metadataType)) {
+      // If it's not a primitive, treat it as a class and generate example recursively
+      examples[key] = generateSwaggerExampleFromSchema(metadataType as any);
+    }
+    // If it's a primitive type, treat it normally
+    else if (metadataType && isPrimitiveType(metadataType)) {
+      examples[key] = example;
+    }
+  });
+  return examples
 }
 
 function generateSwaggerRequestExample<T extends object>(
