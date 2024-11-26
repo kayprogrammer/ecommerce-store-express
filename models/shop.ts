@@ -3,7 +3,7 @@ import { IBase } from "./base";
 import { Types } from "mongoose";
 import { ISeller } from "./sellers";
 import { COLOR_CHOICES, RATING_CHOICES, SIZE_CHOICES } from "./choices";
-import { IUser } from "./accounts";
+import { IGuest, IUser } from "./accounts";
 import slugify from "slugify";
 import mongoose from "mongoose";
 import { generateRandomNumber } from "./utils";
@@ -113,4 +113,24 @@ ProductSchema.virtual('avgRating').get(function(this: IProduct) {
 // Create the Product model
 const Product = model<IProduct>('Product', ProductSchema);
 
-export { ICategory, Category, IProduct, Product }
+// Define the interface for the Wishlist model
+interface IWishlist extends IBase {
+    user: Types.ObjectId | IUser;
+    product: Types.ObjectId | IProduct; 
+    guest: Types.ObjectId | IGuest; 
+}
+
+// Create the Wishlist schema
+const WishlistSchema = new Schema<IWishlist>({
+    user: { type: Schema.Types.ObjectId, required: function () {return !this.guest}, ref: 'User', default: null },
+    guest: { type: Schema.Types.ObjectId, required: function () {return !this.user}, ref: 'Guest', default: null },
+    product: { type: Schema.Types.ObjectId, ref: 'Product' },
+}, { timestamps: true });
+
+// Define unique constraints
+WishlistSchema.index({ user: 1, product: 1 }, { unique: true, sparse: true });
+WishlistSchema.index({ guest: 1, product: 1 }, { unique: true, sparse: true });
+
+const Wishlist = model<IWishlist>('Wishlist', WishlistSchema);
+
+export { ICategory, Category, IProduct, Product, IWishlist, Wishlist }

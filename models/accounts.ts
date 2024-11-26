@@ -49,4 +49,10 @@ const UserSchema = new Schema<IUser>({
 
 // Create the User model
 const User = model<IUser>('User', UserSchema);
-export { User, IUser };
+
+// Define the interface for the Guest model
+interface IGuest extends IBase {
+}
+const GuestSchema = new Schema<IGuest>({}, { timestamps: true })
+const Guest = model<IGuest>('Guest', GuestSchema);
+export { User, IUser, Guest, IGuest };
