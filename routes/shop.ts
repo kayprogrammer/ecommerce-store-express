@@ -1,11 +1,11 @@
 import { NextFunction, Request, Response, Router } from "express";
 import { paginateModel } from "../config/paginators";
-import { Product } from "../models/shop";
+import { Product, Wishlist } from "../models/shop";
 import { SELLER_POPULATION } from "../managers/users";
 import { CustomResponse } from "../config/utils";
 import { ProductSchema, ProductsResponseSchema, ReviewCreateSchema, ReviewSchema } from "../schemas/shop";
 import { NotFoundError } from "../config/handlers";
-import { authMiddleware } from "../middlewares/auth";
+import { authMiddleware, authOrGuestMiddleware } from "../middlewares/auth";
 import { validationMiddleware } from "../middlewares/error";
 
 const shopRouter = Router();
@@ -64,6 +64,22 @@ shopRouter.post('/products/:slug', authMiddleware, validationMiddleware(ReviewCr
         return res.status(200).json(CustomResponse.success(
             `Review ${action} Successfully`, review, ReviewSchema
         ))
+    } catch (error) {
+        next(error)
+    }
+});
+
+/**
+ * @route GET /wishlist
+ * @description Return all products.
+ */
+shopRouter.get('/wishlist', authOrGuestMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user_
+        const wishlistProductIDs = (await Wishlist.find({ $or: [{ user: user._id }, { guest: user._id }] }, "_id")).map(doc => doc.product)
+        const data = await paginateModel(req, Product, { _id: { $in: wishlistProductIDs } }, [SELLER_POPULATION, "category"], { createdAt: -1 })
+        const productsData = { products: data.items, ...data }
+        return res.status(200).json(CustomResponse.success('Wishlist Products Fetched Successfully', productsData, ProductsResponseSchema))
     } catch (error) {
         next(error)
     }

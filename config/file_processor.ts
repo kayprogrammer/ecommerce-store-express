@@ -69,6 +69,6 @@ async function uploadFileToCloudinary(fileBuffer: Buffer, folder: FILE_FOLDER_CH
       );
       uploadStream.end(fileBuffer); // Pass buffer to Cloudinary
     });
-  }
+}
 
 export { upload, uploadFileToCloudinary }
