@@ -3,8 +3,8 @@ import { paginateModel } from "../config/paginators";
 import { Product, Wishlist } from "../models/shop";
 import { SELLER_POPULATION } from "../managers/users";
 import { CustomResponse } from "../config/utils";
-import { ProductSchema, ProductsResponseSchema, ReviewCreateSchema, ReviewSchema } from "../schemas/shop";
-import { NotFoundError } from "../config/handlers";
+import { ProductSchema, ProductsResponseSchema, ReviewCreateSchema, ReviewSchema, WishlistCreateSchema } from "../schemas/shop";
+import { NotFoundError, RequestError } from "../config/handlers";
 import { authMiddleware, authOrGuestMiddleware } from "../middlewares/auth";
 import { validationMiddleware } from "../middlewares/error";
 
@@ -71,7 +71,7 @@ shopRouter.post('/products/:slug', authMiddleware, validationMiddleware(ReviewCr
 
 /**
  * @route GET /wishlist
- * @description Return all products.
+ * @description Return all products in a wishlist.
  */
 shopRouter.get('/wishlist', authOrGuestMiddleware, async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -80,6 +80,30 @@ shopRouter.get('/wishlist', authOrGuestMiddleware, async (req: Request, res: Res
         const data = await paginateModel(req, Product, { _id: { $in: wishlistProductIDs } }, [SELLER_POPULATION, "category"], { createdAt: -1 })
         const productsData = { products: data.items, ...data }
         return res.status(200).json(CustomResponse.success('Wishlist Products Fetched Successfully', productsData, ProductsResponseSchema))
+    } catch (error) {
+        next(error)
+    }
+});
+
+/**
+ * @route POST /wishlist
+ * @description Add or remove a product from wishlist.
+ */
+shopRouter.post('/wishlist', authOrGuestMiddleware, validationMiddleware(WishlistCreateSchema), async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user_
+        const product = await Product.findOne({ slug: req.body.slug })
+        if(!product) throw new NotFoundError("Product Not Found") 
+        const wishlist = await Wishlist.findOne({ $or: [{ user: user._id }, { guest: user._id }], product: product._id })
+        let responseMessageSubstring = "Removed From"
+        if (wishlist) {
+            await wishlist.deleteOne()
+        } else {
+            const dataToCreate = { product: product._id, [ "email" in user ? "user" : "guest" ]: user._id };
+            await Wishlist.create(dataToCreate)
+            responseMessageSubstring = "Added To"
+        }
+        return res.status(200).json(CustomResponse.success(`Product ${responseMessageSubstring} Wishlist`))
     } catch (error) {
         next(error)
     }

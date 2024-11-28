@@ -3,7 +3,7 @@ import { Example } from "./utils";
 import { COLOR_CHOICES, RATING_CHOICES, SIZE_CHOICES } from "../models/choices";
 import { generateSwaggerExampleFromSchema } from "../docs/utils";
 import { PaginatedResponseSchema, UserSchema } from "./base";
-import { IsEnum, Length } from "class-validator";
+import { IsEnum, IsNotEmpty, Length } from "class-validator";
 
 export class SellerSchema {
     @Expose()
@@ -146,4 +146,11 @@ export class ReviewSchema {
     @Expose()
     @Example("This is the best Product")
     text?: string;
+}
+
+export class WishlistCreateSchema {
+    @Expose()
+    @Example("black-shoe")
+    @Length(3, 2000)
+    slug?: string;
 }
