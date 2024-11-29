@@ -13,6 +13,7 @@ interface ISeller extends IBase {
     slug: string;
     email: string;
     phone: string;
+    image: string;
     businessType: BUSINESS_TYPE_CHOICES;
     businessRegistrationNumber: string;
     taxIdentificationNumber: string;
@@ -50,6 +51,7 @@ const SellerSchema = new Schema<ISeller>({
     slug: { type: String },
     email: { type: String, required: true },
     phone: { type: String, required: true, maxlength: 20 },
+    image: { type: String },
     businessType: { type: String, enum: BUSINESS_TYPE_CHOICES, default: BUSINESS_TYPE_CHOICES.SOLE_PROPRIETORSHIP },
     businessRegistrationNumber: { type: String, required: true, maxlength: 100 },
     taxIdentificationNumber: { type: String, required: true, maxlength: 100 },
@@ -78,11 +80,6 @@ const SellerSchema = new Schema<ISeller>({
 SellerSchema.virtual('country').get(function(this: ISeller) {
     const countryObj = this.country_ as ICountry
     return countryObj?.name || null;
-});
-
-SellerSchema.virtual('image').get(function(this: ISeller) {
-    const userObj = this.user as IUser
-    return userObj?.avatar || null;
 });
 
 SellerSchema.pre('save', async function (next) {

@@ -134,6 +134,6 @@ const validateFacebookToken = async (authToken: string): Promise<Record<string,a
 
 const shortUserPopulation = (field: string) => ({path: field, select: "name avatar"})
 
-const SELLER_POPULATION = {path: "seller", select: "name slug image", populate: { path: "user", select: "avatar" }}
+const SELLER_POPULATION = {path: "seller", select: "name slug image"}
 
 export { createUser, createOtp, hashPassword, checkPassword, createAccessToken, createRefreshToken, verifyRefreshToken, decodeAuth, validateGoogleToken, validateFacebookToken, shortUserPopulation, SELLER_POPULATION };

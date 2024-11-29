@@ -54,6 +54,17 @@ const swaggerDocument = {
         scheme: 'bearer',
         bearerFormat: 'JWT',
       },
+      GuestAuth: {
+        type: "apiKey",
+        in: "header",
+        name: "guest", // Header name
+        description: `
+          Custom header for guest access. Use 'guest' as the key and provide the required value.
+          You can find the value in the response of cart or wishlist endpoints you visit as a guest.
+          This is necessary for handling wishlists and carts for guests.
+          I know say using cookies and sessions would have been easier, but I wanted a solution without cookies/sessions 😊
+        `
+      },
     },
     security: [
       {

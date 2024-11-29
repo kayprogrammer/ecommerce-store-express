@@ -15,6 +15,7 @@ import { ProductSchema, ProductsResponseSchema } from "../schemas/shop";
 const sellerRouter = Router();
 
 const fileFields = [
+    { name: "image", maxCount: 1 },
     { name: "governmentId", maxCount: 1 },
     { name: "proofOfAddress", maxCount: 1 },
     { name: "businessLicense", maxCount: 1 }  
@@ -34,10 +35,12 @@ sellerRouter.post('/application',
             const user = req.user
             const data = req.body;
             const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+            const imageFIle = files.image?.[0];
             const governmentIdFile = files.governmentId?.[0];
             const proofOfAddressFile = files.proofOfAddress?.[0];
             const businessLicenseFile = files.businessLicense?.[0];
 
+            data.image = await uploadFileToCloudinary(imageFIle?.buffer, FILE_FOLDER_CHOICES.AVATAR)
             data.governmentId = await uploadFileToCloudinary(governmentIdFile?.buffer, FILE_FOLDER_CHOICES.ID)
             data.proofOfAddress = await uploadFileToCloudinary(proofOfAddressFile?.buffer, FILE_FOLDER_CHOICES.ID)
             data.businessLicense = await uploadFileToCloudinary(businessLicenseFile?.buffer, FILE_FOLDER_CHOICES.ID)

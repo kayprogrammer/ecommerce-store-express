@@ -1,12 +1,13 @@
 import { NextFunction, Request, Response, Router } from "express";
-import { paginateModel } from "../config/paginators";
+import { paginateModel, paginateRecords } from "../config/paginators";
 import { Product, Wishlist } from "../models/shop";
 import { SELLER_POPULATION } from "../managers/users";
 import { CustomResponse } from "../config/utils";
 import { ProductSchema, ProductsResponseSchema, ReviewCreateSchema, ReviewSchema, WishlistCreateSchema } from "../schemas/shop";
-import { NotFoundError, RequestError } from "../config/handlers";
+import { NotFoundError } from "../config/handlers";
 import { authMiddleware, authOrGuestMiddleware } from "../middlewares/auth";
 import { validationMiddleware } from "../middlewares/error";
+import { getProducts } from "../managers/shop";
 
 const shopRouter = Router();
 
@@ -14,9 +15,10 @@ const shopRouter = Router();
  * @route GET /products
  * @description Return all products.
  */
-shopRouter.get('/products', async (req: Request, res: Response, next: NextFunction) => {
+shopRouter.get('/products', authOrGuestMiddleware, async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const data = await paginateModel(req, Product, {}, [SELLER_POPULATION, "category"], { createdAt: -1 })
+        const products = await getProducts(req.user_)
+        const data = await paginateRecords(req, products)
         const productsData = { products: data.items, ...data }
         return res.status(200).json(CustomResponse.success('Products Fetched Successfully', productsData, ProductsResponseSchema))
     } catch (error) {
@@ -28,10 +30,12 @@ shopRouter.get('/products', async (req: Request, res: Response, next: NextFuncti
  * @route GET /products/:slug
  * @description Return single product.
  */
-shopRouter.get('/products/:slug', async (req: Request, res: Response, next: NextFunction) => {
+shopRouter.get('/products/:slug', authOrGuestMiddleware, async (req: Request, res: Response, next: NextFunction) => {
     try {
+        const user = req.user_
         const product = await Product.findOne({ slug: req.params.slug }).populate([SELLER_POPULATION, "category"])
         if (!product) throw new NotFoundError("Product does not exist!")
+        product.wishlisted = (await Wishlist.exists({ product: product._id, $or: [{ user: user._id }, { guest: user._id }] })) ? true : false
         return res.status(200).json(CustomResponse.success('Product Details Fetched Successfully', product, ProductSchema))
     } catch (error) {
         next(error)
@@ -76,10 +80,11 @@ shopRouter.post('/products/:slug', authMiddleware, validationMiddleware(ReviewCr
 shopRouter.get('/wishlist', authOrGuestMiddleware, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const user = req.user_
-        const wishlistProductIDs = (await Wishlist.find({ $or: [{ user: user._id }, { guest: user._id }] }, "_id")).map(doc => doc.product)
+        const wishlistProductIDs = (await Wishlist.find({ $or: [{ user: user._id }, { guest: user._id }] }, "product")).map(doc => doc.product)
         const data = await paginateModel(req, Product, { _id: { $in: wishlistProductIDs } }, [SELLER_POPULATION, "category"], { createdAt: -1 })
         const productsData = { products: data.items, ...data }
-        return res.status(200).json(CustomResponse.success('Wishlist Products Fetched Successfully', productsData, ProductsResponseSchema))
+        const guestId = "email" in user ? null : user.id
+        return res.status(200).json(CustomResponse.success('Wishlist Products Fetched Successfully', productsData, ProductsResponseSchema, guestId))
     } catch (error) {
         next(error)
     }
@@ -103,7 +108,8 @@ shopRouter.post('/wishlist', authOrGuestMiddleware, validationMiddleware(Wishlis
             await Wishlist.create(dataToCreate)
             responseMessageSubstring = "Added To"
         }
-        return res.status(200).json(CustomResponse.success(`Product ${responseMessageSubstring} Wishlist`))
+        const guestId = "email" in user ? null : user.id
+        return res.status(200).json(CustomResponse.success(`Product ${responseMessageSubstring} Wishlist`, guestId))
     } catch (error) {
         next(error)
     }

@@ -10,9 +10,10 @@ export class CustomResponse {
   static success<T, U, V extends T | undefined>(
     message: string,
     data?: U | U[],
-    dataSchema?: new () => V
+    dataSchema?: new () => V,
+    guestId: string | null = null
   ): ResponseBase & { data?: T } {
-    let response: ResponseBase & { data?: T } = {
+    let response: ResponseBase & { data?: T, guestId?: string } = {
       status: "success",
       message
     };
@@ -25,6 +26,7 @@ export class CustomResponse {
     } else {
       response.data = data as T;
     }
+    if (guestId) response.guestId = guestId
     return response;
   }
 

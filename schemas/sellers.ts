@@ -20,6 +20,9 @@ export class SellerApplicationSchema {
     @Example("+2348112345069")
     @IsPhoneNumber()
     phone?: string;
+
+    @Expose()
+    image?: Buffer;
     
     @Expose()
     @Example(BUSINESS_TYPE_CHOICES.SOLE_PROPRIETORSHIP)
