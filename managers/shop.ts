@@ -1,10 +1,11 @@
+import { PipelineStage } from "mongoose";
 import { IGuest, IUser } from "../models/accounts";
 import { Product } from "../models/shop";
 
-const getProducts = async (user: IUser | IGuest) => {
+const getProducts = async (user: IUser | IGuest, nameFilter: string | null = null) => {
     try {
         const userOrGuestMatch = [{[ "email" in user ? "user" : "guest" ]: user._id}];
-        const products = await Product.aggregate([
+        const aggregateData: PipelineStage[] = [
             // Add reviewsCount and avgRating
             {
                 $addFields: {
@@ -63,7 +64,9 @@ const getProducts = async (user: IUser | IGuest) => {
 
             // Sort by createdAt descending
             { $sort: { createdAt: -1 } }
-        ]);
+        ];
+        if (nameFilter) aggregateData.push({$match: {name: { $regex: nameFilter, $options: "i" }}})
+        const products = await Product.aggregate(aggregateData)
         return products;
     } catch (err) {
       console.error(err);

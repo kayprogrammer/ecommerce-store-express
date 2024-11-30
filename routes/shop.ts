@@ -17,7 +17,8 @@ const shopRouter = Router();
  */
 shopRouter.get('/products', authOrGuestMiddleware, async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const products = await getProducts(req.user_)
+        const nameFilter = req.query.name as string | null
+        const products = await getProducts(req.user_, nameFilter)
         const data = await paginateRecords(req, products)
         const productsData = { products: data.items, ...data }
         return res.status(200).json(CustomResponse.success('Products Fetched Successfully', productsData, ProductsResponseSchema))

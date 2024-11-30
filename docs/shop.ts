@@ -12,7 +12,10 @@ const productsDocs = {
         description: `
             Allows anyone to fetch a paginated data of the latest products
         `,
-        parameters: generatePaginationParamExample("products"),
+        parameters: [
+            generateParamExample("name", "Filter Products By Name", "string", "Shirt"),
+            ...generatePaginationParamExample("products")
+        ],
         security: [{ BearerAuth: [], GuestAuth: [] }],
         responses: {
             200: generateSwaggerResponseExample('Products Successful Response', SUCCESS_STATUS, "Products Fetched Successfully", ProductsResponseSchema),
