@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response, Router } from "express";
 import { paginateModel, paginateRecords } from "../config/paginators";
-import { Product, Wishlist } from "../models/shop";
+import { Category, Product, Wishlist } from "../models/shop";
 import { SELLER_POPULATION } from "../managers/users";
 import { CustomResponse } from "../config/utils";
-import { ProductSchema, ProductsResponseSchema, ReviewCreateSchema, ReviewSchema, WishlistCreateSchema } from "../schemas/shop";
+import { CategorySchema, ProductSchema, ProductsResponseSchema, ReviewCreateSchema, ReviewSchema, WishlistCreateSchema } from "../schemas/shop";
 import { NotFoundError } from "../config/handlers";
 import { authMiddleware, authOrGuestMiddleware } from "../middlewares/auth";
 import { validationMiddleware } from "../middlewares/error";
@@ -115,5 +115,35 @@ shopRouter.post('/wishlist', authOrGuestMiddleware, validationMiddleware(Wishlis
         next(error)
     }
 });
+
+/**
+ * @route GET /categories
+ * @description Return all categories.
+ */
+shopRouter.get('/categories', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const categories = await Category.find({})
+        return res.status(200).json(CustomResponse.success('Categories Fetched Successfully', categories, CategorySchema))
+    } catch (error) {
+        next(error)
+    }
+});
+
+/**
+ * @route GET /categories/:slug
+ * @description Return all products in a category.
+ */
+// shopRouter.get('/products', authOrGuestMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+//     try {
+//         const nameFilter = req.query.name as string | null
+//         const products = await getProducts(req.user_, nameFilter)
+//         const data = await paginateRecords(req, products)
+//         const productsData = { products: data.items, ...data }
+//         return res.status(200).json(CustomResponse.success('Products Fetched Successfully', productsData, ProductsResponseSchema))
+//     } catch (error) {
+//         next(error)
+//     }
+// });
+
 
 export default shopRouter

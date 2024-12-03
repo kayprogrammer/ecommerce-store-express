@@ -1,5 +1,5 @@
 import { ErrorCode } from "../config/handlers"
-import { ProductSchema, ProductsResponseSchema, ReviewCreateSchema, ReviewSchema, WishlistCreateSchema } from "../schemas/shop"
+import { CategorySchema, ProductSchema, ProductsResponseSchema, ReviewCreateSchema, ReviewSchema, WishlistCreateSchema } from "../schemas/shop"
 import { ERROR_EXAMPLE_422, ERROR_EXAMPLE_500, ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN, FAILURE_STATUS, SUCCESS_STATUS } from "./base"
 import { generatePaginationParamExample, generateParamExample, generateSwaggerRequestExample, generateSwaggerResponseExample } from "./utils"
 
@@ -93,4 +93,18 @@ const wishlistDocs = {
     }
 }
 
-export { productsDocs, productDocs, wishlistDocs }
+const categoriesDocs = {
+    get: {
+        tags,
+        summary: 'Fetch All Categories',
+        description: `
+            Allows anyone to fetch all categories
+        `,
+        responses: {
+            200: generateSwaggerResponseExample('Categories Successful Response', SUCCESS_STATUS, "Categories Fetched Successfully", CategorySchema, null, true),
+            500: ERROR_EXAMPLE_500
+        }
+    }
+}
+
+export { productsDocs, productDocs, wishlistDocs, categoriesDocs }
