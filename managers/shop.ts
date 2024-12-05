@@ -2,7 +2,7 @@ import { PipelineStage } from "mongoose";
 import { IGuest, IUser } from "../models/accounts";
 import { Product } from "../models/shop";
 
-const getProducts = async (user: IUser | IGuest, nameFilter: string | null = null) => {
+const getProducts = async (user: IUser | IGuest, filter: Record<string,any> | null = null) => {
     try {
         const userOrGuestMatch = [{[ "email" in user ? "user" : "guest" ]: user._id}];
         const aggregateData: PipelineStage[] = [
@@ -65,7 +65,7 @@ const getProducts = async (user: IUser | IGuest, nameFilter: string | null = nul
             // Sort by createdAt descending
             { $sort: { createdAt: -1 } }
         ];
-        if (nameFilter) aggregateData.push({$match: {name: { $regex: nameFilter, $options: "i" }}})
+        if (filter) aggregateData.push({$match: filter})
         const products = await Product.aggregate(aggregateData)
         return products;
     } catch (err) {

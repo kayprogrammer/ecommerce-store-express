@@ -18,7 +18,9 @@ const shopRouter = Router();
 shopRouter.get('/products', authOrGuestMiddleware, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const nameFilter = req.query.name as string | null
-        const products = await getProducts(req.user_, nameFilter)
+        const filter: Record<string,any> = {}
+        if (nameFilter) filter.name = { $regex: nameFilter, $options: "i" }
+        const products = await getProducts(req.user_, filter)
         const data = await paginateRecords(req, products)
         const productsData = { products: data.items, ...data }
         return res.status(200).json(CustomResponse.success('Products Fetched Successfully', productsData, ProductsResponseSchema))
@@ -133,17 +135,23 @@ shopRouter.get('/categories', async (req: Request, res: Response, next: NextFunc
  * @route GET /categories/:slug
  * @description Return all products in a category.
  */
-// shopRouter.get('/products', authOrGuestMiddleware, async (req: Request, res: Response, next: NextFunction) => {
-//     try {
-//         const nameFilter = req.query.name as string | null
-//         const products = await getProducts(req.user_, nameFilter)
-//         const data = await paginateRecords(req, products)
-//         const productsData = { products: data.items, ...data }
-//         return res.status(200).json(CustomResponse.success('Products Fetched Successfully', productsData, ProductsResponseSchema))
-//     } catch (error) {
-//         next(error)
-//     }
-// });
+shopRouter.get('/categories/:slug', authOrGuestMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const category = await Category.findOne({ slug: req.params.slug })
+        if (!category) throw new NotFoundError("Category does not exist")
+
+        const filter: Record<string,any> = { "category._id": category._id }
+        const nameFilter = req.query.name as string | null
+        if (nameFilter) filter.name = { $regex: nameFilter, $options: "i" }
+
+        const products = await getProducts(req.user_, filter)
+        const data = await paginateRecords(req, products)
+        const productsData = { products: data.items, ...data }
+        return res.status(200).json(CustomResponse.success('Category Products Fetched Successfully', productsData, ProductsResponseSchema))
+    } catch (error) {
+        next(error)
+    }
+});
 
 
 export default shopRouter

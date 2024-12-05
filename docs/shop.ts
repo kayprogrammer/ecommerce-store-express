@@ -107,4 +107,24 @@ const categoriesDocs = {
     }
 }
 
-export { productsDocs, productDocs, wishlistDocs, categoriesDocs }
+const categoryProductsDocs = {
+    get: {
+        tags,
+        summary: 'Fetch All Products In A Category',
+        description: `
+            Allows anyone to fetch all products in a category.
+        `,
+        parameters: [
+            generateParamExample("name", "Filter Products By Name", "string", "Shirt"),
+            generateParamExample("slug", "Filter Products By Category Slug", "string", "clothing", "path"),
+            ...generatePaginationParamExample("products")
+        ],
+        responses: {
+            200: generateSwaggerResponseExample('Categories Successful Response', SUCCESS_STATUS, "Categories Fetched Successfully", CategorySchema, null, true),
+            404: generateSwaggerResponseExample('Not Found Response', FAILURE_STATUS, "Category does not exist!", null, ErrorCode.NON_EXISTENT),
+            500: ERROR_EXAMPLE_500
+        }
+    }
+}
+
+export { productsDocs, productDocs, wishlistDocs, categoriesDocs, categoryProductsDocs }

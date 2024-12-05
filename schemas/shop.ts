@@ -77,8 +77,7 @@ export class ProductSchema {
     @Example(150.50)
     priceCurrent?: string;
 
-    @Expose(generateSwaggerExampleFromSchema(CategorySchema))
-    @Example(20)
+    @Expose()
     @Type(() => CategorySchema)
     category?: CategorySchema;
 
