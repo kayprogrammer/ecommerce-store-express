@@ -2,11 +2,11 @@ import { model, Schema } from "mongoose";
 import { IBase } from "./base";
 import { Types } from "mongoose";
 import { ISeller } from "./sellers";
-import { COLOR_CHOICES, RATING_CHOICES, SIZE_CHOICES } from "./choices";
+import { COLOR_CHOICES, DELIVERY_STATUS_CHOICES, PAYMENT_STATUS_CHOICES, RATING_CHOICES, SIZE_CHOICES } from "./choices";
 import { IGuest, IUser } from "./accounts";
 import slugify from "slugify";
 import mongoose from "mongoose";
-import { generateRandomNumber } from "./utils";
+import { generateRandomCode, generateRandomNumber, generateUniqueCode } from "./utils";
 
 // Define the interface for the Category model
 interface ICategory extends IBase {
@@ -24,6 +24,14 @@ const CategorySchema = new Schema<ICategory>({
 
 const Category = model<ICategory>('Category', CategorySchema);
 
+interface IVariant {
+    size: SIZE_CHOICES, 
+    color: COLOR_CHOICES, 
+    stock: number, 
+    image: string,
+    price: number;
+}
+
 // Define the interface for the Product model
 interface IProduct extends IBase {
     seller: Types.ObjectId | ISeller
@@ -34,7 +42,7 @@ interface IProduct extends IBase {
     priceCurrent: number;
     category: Types.ObjectId | ICategory
     generalStock: number; // If variants exists then it should be 0
-    variants: { size: SIZE_CHOICES, color: COLOR_CHOICES, stock: number, image: string }[]; // Image url is for color variants 
+    variants: IVariant[]; // Image url is for color variants 
     image1: string;
     image2: string;
     image3: string;
@@ -70,6 +78,7 @@ const ProductSchema = new Schema<IProduct>({
         color: { type: String, enum: COLOR_CHOICES, required: false },
         stock: { type: Number, default: 1 },
         image: { type: String, required: false },
+        price: { type: Number, required: true },
     }],
     image1: { type: String, required: true },
     image2: { type: String, default: null },
@@ -133,4 +142,109 @@ WishlistSchema.index({ guest: 1, product: 1 }, { unique: true, sparse: true });
 
 const Wishlist = model<IWishlist>('Wishlist', WishlistSchema);
 
-export { ICategory, Category, IProduct, Product, IWishlist, Wishlist }
+// Define the interface for the Coupon model
+interface ICoupon extends IBase {
+    code: string;
+    expiryDate: Date;
+    percentageOff: number;
+}
+
+// Create the Coupon schema
+const CouponSchema = new Schema<ICoupon>({
+    code: { type: String },
+    expiryDate: { type: Date, default: null },
+    percentageOff: { type: Number, min: 5, max: 100, default: 10 }
+}, { timestamps: true });
+
+CouponSchema.pre('save', async function (next) {
+    try {
+        if (this.isNew) {
+            this.code = await generateUniqueCode("Coupon", "code", 15)
+        }
+        next();
+    } catch (error: any) {
+        next(error)
+    }
+});
+
+const Coupon = model<ICoupon>('Coupon', CouponSchema);
+
+// Define the interface for the ShippingDetails model
+interface IShippingAddress {
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+    city: string;
+    state: string;
+    country: string;
+    zipcode: number;
+}
+
+// Define the interface for the Order model
+interface IOrder extends IBase {
+    user: Types.ObjectId | IUser;
+    txRef: string;
+    paymentStatus: PAYMENT_STATUS_CHOICES;
+    deliveryStatus: DELIVERY_STATUS_CHOICES;
+    coupon: Types.ObjectId | ICoupon | null; 
+    dateDelivered: Date | null;
+    shippingDetails: IShippingAddress;
+}
+
+// Create the Order schema
+const OrderSchema = new Schema<IOrder>({
+    user: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    txRef: { type: String },
+    paymentStatus: { type: String, enum: PAYMENT_STATUS_CHOICES, default: PAYMENT_STATUS_CHOICES.PENDING },
+    deliveryStatus: { type: String, enum: DELIVERY_STATUS_CHOICES, default: DELIVERY_STATUS_CHOICES.PENDING },
+    coupon: { type: Schema.Types.ObjectId, ref: "Coupon", default: null },
+    dateDelivered: { type: Date, default: null },
+    shippingDetails: { 
+        name: { type: String, maxlength: 100 }, email: { type: String },
+        phone: { type: String, maxlength: 20 }, address: { type: String, maxlength: 100}, 
+        city: { type: String }, state: { type: String }, 
+        country: { type: String }, zipcode: { type: Number }, 
+    }
+}, { timestamps: true });
+
+OrderSchema.pre('save', async function (next) {
+    try {
+        if (this.isNew) {
+            this.txRef = await generateUniqueCode("Order", "txRef", 50)
+        }
+        next();
+    } catch (error: any) {
+        next(error)
+    }
+});
+
+const Order = model<IOrder>('Order', OrderSchema);
+
+// Define the interface for the OrderItem model
+interface IOrderItem extends IBase {
+    user: Types.ObjectId | IUser;
+    guest: Types.ObjectId | IGuest; 
+    product: Types.ObjectId | IProduct; 
+    order: Types.ObjectId | IOrder; 
+    quantity: number;
+    variant: Types.ObjectId | IVariant;
+}
+
+// Create the OrderItem schema
+const OrderItemSchema = new Schema<IOrderItem>({
+    user: { type: Schema.Types.ObjectId, required: function () {return !this.guest}, ref: 'User', default: null },
+    guest: { type: Schema.Types.ObjectId, required: function () {return !this.user}, ref: 'Guest', default: null },
+    product: { type: Schema.Types.ObjectId, ref: 'Product' },
+    order: { type: Schema.Types.ObjectId, ref: "Order", default: null },
+    quantity: { type: Number, default: 1, min: 1 },
+    variant: { type: Schema.Types.ObjectId, default: null }
+}, { timestamps: true });
+
+// Define unique constraints
+OrderItemSchema.index({ user: 1, product: 1 }, { unique: true, sparse: true });
+OrderItemSchema.index({ guest: 1, product: 1 }, { unique: true, sparse: true });
+
+const OrderItem = model<IOrderItem>('OrderItem', OrderItemSchema);
+
+export { ICategory, Category, IProduct, Product, IWishlist, Wishlist, ICoupon, Coupon, IOrder, Order, IOrderItem, OrderItem }
