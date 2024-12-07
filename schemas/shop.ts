@@ -49,6 +49,10 @@ export class VariantSchema {
     @Expose()
     @Example("https://image.url/shoeee")
     image?: string;
+
+    @Expose()
+    @Example(200.50)
+    price?: string;
 }
 
 export class ProductSchema {
@@ -152,4 +156,37 @@ export class WishlistCreateSchema {
     @Example("black-shoe")
     @Length(3, 2000)
     slug?: string;
+}
+
+export class OrderitemProductSchema {
+    @Expose()
+    seller?: SellerSchema;
+
+    @Expose()
+    @Example("Good shoes")
+    name?: string;
+
+    @Expose()
+    @Example("good-shoes")
+    slug?: string;
+
+    @Expose()
+    @Example("10000.35")
+    price?: string;
+}
+
+export class OrderItemSchema {
+    @Expose()
+    product?: OrderitemProductSchema;
+
+    @Expose()
+    @Example(5)
+    quantity?: number;
+
+    @Expose()
+    variant?: VariantSchema;
+
+    @Expose()
+    @Example("10000.35")
+    total?: string;
 }
