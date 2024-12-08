@@ -47,7 +47,7 @@ interface IProduct extends IBase {
     image2: string;
     image3: string;
 
-    reviews: { user: Types.ObjectId | IUser, text: string, rating: RATING_CHOICES }[]
+    reviews: any;
     reviewsCount: number;
     avgRating: number;
     wishlisted: boolean;
@@ -83,12 +83,6 @@ const ProductSchema = new Schema<IProduct>({
     image1: { type: String, required: true },
     image2: { type: String, default: null },
     image3: { type: String, default: null },
-
-    reviews: [{ 
-        user: { type: Schema.Types.ObjectId, ref: 'User' }, 
-        text: { type: String, maxlength: 500 },
-        rating: { type: Number, enum: RATING_CHOICES },
-    }],
 }, { timestamps: true });
   
 ProductSchema.pre('save', async function (next) {
@@ -110,17 +104,29 @@ ProductSchema.pre('save', async function (next) {
     }
 });
 
-ProductSchema.virtual('reviewsCount').get(function(this: IProduct) {
-    return this.reviews.length;
-});
-
-ProductSchema.virtual('avgRating').get(function(this: IProduct) {
-    const reviews = this.reviews
-    return reviews.reduce((sum, item) => sum + (item["rating"] || 0), 0) / reviews.length || 0;
-});
-
 // Create the Product model
 const Product = model<IProduct>('Product', ProductSchema);
+
+// Define the interface for the Review model
+interface IReview extends IBase {
+    user: Types.ObjectId | IUser;
+    product: Types.ObjectId | IProduct;
+    text: string;
+    rating: RATING_CHOICES;
+}
+
+// Define the schema for the Review model
+const ReviewSchema = new Schema<IReview>({
+    user: { type: Schema.Types.ObjectId, ref: 'User' },
+    product: { type: Schema.Types.ObjectId, ref: 'Product' },
+    text: { type: String, maxlength: 500 },
+    rating: { type: Number, enum: RATING_CHOICES },
+}, { timestamps: true })
+
+ReviewSchema.index({ user: 1, product: 1 }, { unique: true, sparse: true });
+// Create the Review model
+const Review = model<IReview>('Review', ReviewSchema);
+
 
 // Define the interface for the Wishlist model
 interface IWishlist extends IBase {
@@ -247,4 +253,4 @@ OrderItemSchema.index({ guest: 1, product: 1 }, { unique: true, sparse: true });
 
 const OrderItem = model<IOrderItem>('OrderItem', OrderItemSchema);
 
-export { ICategory, Category, IProduct, Product, IWishlist, Wishlist, ICoupon, Coupon, IOrder, Order, IOrderItem, OrderItem }
+export { ICategory, Category, IProduct, Product, IReview, Review, IWishlist, Wishlist, ICoupon, Coupon, IOrder, Order, IOrderItem, OrderItem }

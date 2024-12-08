@@ -2,10 +2,10 @@ import { Expose, Type } from "class-transformer";
 import { Example } from "./utils";
 import { COLOR_CHOICES, RATING_CHOICES, SIZE_CHOICES } from "../models/choices";
 import { generateSwaggerExampleFromSchema } from "../docs/utils";
-import { PaginatedResponseSchema, UserSchema } from "./base";
-import { IsEnum, IsNotEmpty, Length } from "class-validator";
+import { DATETIME_EXAMPLE, ID_EXAMPLE, PaginatedResponseSchema, UserSchema } from "./base";
+import { IsEnum, IsMongoId, IsOptional, Length } from "class-validator";
 
-export class SellerSchema {
+export class VendorSchema {
     @Expose()
     @Example("John Doe Stores")
     name?: string;
@@ -35,6 +35,10 @@ export class CategorySchema {
 
 export class VariantSchema {
     @Expose()
+    @Example(ID_EXAMPLE)
+    _id?: string;
+
+    @Expose()
     @Example(SIZE_CHOICES.M)
     size?: SIZE_CHOICES;
 
@@ -55,12 +59,39 @@ export class VariantSchema {
     price?: string;
 }
 
-export class ProductSchema {
+export class ReviewSchema {
     @Expose()
-    @Example(generateSwaggerExampleFromSchema(SellerSchema))
-    @Type(() => SellerSchema)
-    seller?: SellerSchema
+    @Example(ID_EXAMPLE)
+    id?: string;
 
+    @Expose()
+    user?: UserSchema;
+
+    @Expose()
+    @Example(RATING_CHOICES.THREE)
+    rating?: RATING_CHOICES;
+
+    @Expose()
+    @Example("This is the best Product")
+    text?: string;
+
+    @Expose()
+    @Example(DATETIME_EXAMPLE)
+    createdAt?: Date;
+
+    @Expose()
+    @Example(DATETIME_EXAMPLE)
+    updatedAt?: Date;
+}
+
+export class ReviewsResponseSchema extends PaginatedResponseSchema {
+    @Expose()
+    @Type(() => ReviewSchema)
+    @Example([generateSwaggerExampleFromSchema(ReviewSchema)])
+    items?: ReviewSchema[]
+}
+
+export class ProductListSchema {
     @Expose()
     @Example("Good Shoes")
     name?: string;
@@ -68,10 +99,6 @@ export class ProductSchema {
     @Expose()
     @Example("good-shoes")
     slug?: string;
-
-    @Expose()
-    @Example("This is a nice shoe")
-    desc?: string;
 
     @Expose()
     @Example(200.50)
@@ -86,15 +113,6 @@ export class ProductSchema {
     category?: CategorySchema;
 
     @Expose()
-    @Example(10)
-    generalStock?: number;
-
-    @Expose()
-    @Example([generateSwaggerExampleFromSchema(VariantSchema)])
-    @Type(() => VariantSchema)
-    variants?: VariantSchema[];
-
-    @Expose()
     @Example(1)
     reviewsCount?: number;
 
@@ -104,7 +122,7 @@ export class ProductSchema {
 
     @Expose()
     @Example(true)
-    wishlisted?: boolean;
+    carted?: boolean;
 
     @Expose()
     @Example("https://image.url/shoes")
@@ -119,11 +137,34 @@ export class ProductSchema {
     image3?: string;
 }
 
+export class ProductDetailSchema extends ProductListSchema {
+    @Expose()
+    @Type(() => VendorSchema)
+    vendor?: VendorSchema
+
+    @Expose()
+    @Example("This is a nice shoe")
+    desc?: string;
+
+    @Expose()
+    @Example(10)
+    generalStock?: number;
+
+    @Expose()
+    @Example([generateSwaggerExampleFromSchema(VariantSchema)])
+    @Type(() => VariantSchema)
+    variants?: VariantSchema[];
+
+    @Expose()
+    @Type(() => ReviewsResponseSchema)
+    reviews?: ReviewsResponseSchema;
+}
+
 export class ProductsResponseSchema extends PaginatedResponseSchema {
     @Expose()
-    @Type(() => ProductSchema)
-    @Example([generateSwaggerExampleFromSchema(ProductSchema)])
-    products?: ProductSchema[]
+    @Type(() => ProductListSchema)
+    @Example([generateSwaggerExampleFromSchema(ProductListSchema)])
+    products?: ProductListSchema[]
 }
 
 export class ReviewCreateSchema {
@@ -138,19 +179,6 @@ export class ReviewCreateSchema {
     text?: string;
 }
 
-export class ReviewSchema {
-    @Expose()
-    user?: UserSchema;
-
-    @Expose()
-    @Example(RATING_CHOICES.THREE)
-    rating?: RATING_CHOICES;
-
-    @Expose()
-    @Example("This is the best Product")
-    text?: string;
-}
-
 export class WishlistCreateSchema {
     @Expose()
     @Example("black-shoe")
@@ -160,7 +188,7 @@ export class WishlistCreateSchema {
 
 export class OrderitemProductSchema {
     @Expose()
-    seller?: SellerSchema;
+    vendor?: VendorSchema;
 
     @Expose()
     @Example("Good shoes")
@@ -172,7 +200,11 @@ export class OrderitemProductSchema {
 
     @Expose()
     @Example("10000.35")
-    price?: string;
+    priceCurrent?: string;
+
+    @Expose()
+    @Example("https://product-img.url")
+    image1?: string;
 }
 
 export class OrderItemSchema {
@@ -189,4 +221,31 @@ export class OrderItemSchema {
     @Expose()
     @Example("10000.35")
     total?: string;
+}
+
+export class AddToCartSchema {
+    @Expose()
+    @Example("good-prod")
+    slug?: string;
+    
+    @Expose()
+    @Example(3)
+    quantity?: number;
+
+    @Expose()
+    @Example(ID_EXAMPLE)
+    @IsOptional()
+    @IsMongoId()
+    variantId?: number;
+}
+
+export class CheckoutSchema {
+    @Expose()
+    @Example(ID_EXAMPLE)
+    @IsMongoId()
+    shippingId?: string;
+}
+
+export class OrderSchema {
+    
 }

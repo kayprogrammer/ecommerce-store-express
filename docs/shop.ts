@@ -1,5 +1,5 @@
 import { ErrorCode } from "../config/handlers"
-import { CategorySchema, ProductSchema, ProductsResponseSchema, ReviewCreateSchema, ReviewSchema, WishlistCreateSchema } from "../schemas/shop"
+import { CategorySchema, ProductDetailSchema, ProductListSchema, ProductsResponseSchema, ReviewCreateSchema, ReviewSchema, WishlistCreateSchema } from "../schemas/shop"
 import { ERROR_EXAMPLE_422, ERROR_EXAMPLE_500, ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN, FAILURE_STATUS, SUCCESS_STATUS } from "./base"
 import { generatePaginationParamExample, generateParamExample, generateSwaggerRequestExample, generateSwaggerResponseExample } from "./utils"
 
@@ -36,7 +36,7 @@ const productDocs = {
         parameters: [SLUG_PARAM],
         security: [{ BearerAuth: [], GuestAuth: [] }],
         responses: {
-            200: generateSwaggerResponseExample('Product Successful Response', SUCCESS_STATUS, "Product Details Fetched Successfully", ProductSchema),
+            200: generateSwaggerResponseExample('Product Successful Response', SUCCESS_STATUS, "Product Details Fetched Successfully", ProductDetailSchema),
             404: generateSwaggerResponseExample('Not Found Response', FAILURE_STATUS, "Product does not exist!", null, ErrorCode.NON_EXISTENT),
             500: ERROR_EXAMPLE_500
         }
@@ -70,7 +70,7 @@ const wishlistDocs = {
         parameters: generatePaginationParamExample("products"),
         security: [{ BearerAuth: [], GuestAuth: [] }],
         responses: {
-            200: generateSwaggerResponseExample('Product Successful Response', SUCCESS_STATUS, "Product Details Fetched Successfully", ProductSchema),
+            200: generateSwaggerResponseExample('Product Successful Response', SUCCESS_STATUS, "Wishlist Products Fetched Successfully", ProductListSchema),
             401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
             500: ERROR_EXAMPLE_500
         }

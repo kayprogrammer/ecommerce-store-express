@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import mongoose from 'mongoose';
+import { IReview } from './shop';
 
 // Helper function to generate a random alphanumeric string
 const randomStringGenerator = (length: number):string => crypto.randomBytes(length).toString('hex').slice(0, length);
@@ -15,4 +16,8 @@ const generateUniqueCode = async (modelClass: string, field: string, length: num
     return code
 } 
 
-export { randomStringGenerator, generateRandomNumber, generateRandomCode, generateUniqueCode }
+const getAvgRating = (reviews: IReview[]): number => {
+    return reviews.reduce((sum, item) => sum + (item["rating"] || 0), 0) / reviews.length || 0;
+}
+
+export { randomStringGenerator, generateRandomNumber, generateRandomCode, generateUniqueCode, getAvgRating }

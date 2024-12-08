@@ -8,15 +8,20 @@ const getProducts = async (user: IUser | IGuest, filter: Record<string,any> | nu
         const aggregateData: PipelineStage[] = [
             // Add reviewsCount and avgRating
             {
-                $addFields: {
-                    reviewsCount: { $size: { $ifNull: ['$reviews', []] } },
-                    avgRating: {
-                        $cond: {
-                            if: { $gt: [{ $size: { $ifNull: ['$reviews', []] } }, 0] },
-                            then: { $avg: '$reviews.rating' }, else: 0,
-                        },
-                    },
+                $lookup: {
+                    from: 'reviews',  // The collection where reviews are stored
+                    localField: '_id',
+                    foreignField: 'product',
+                    as: 'reviews',
                 },
+            },
+            {
+                $addFields: {
+                    reviewsCount: { $size: '$reviews' }, 
+                    avgRating: { 
+                        $ifNull: [{ $avg: '$reviews.rating' }, 0]
+                    }
+                }
             },
             // Lookup the Wishlist collection
             {

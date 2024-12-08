@@ -1,7 +1,7 @@
 import { SellerApplicationSchema } from "../schemas/sellers"
 import { ERROR_EXAMPLE_422, ERROR_EXAMPLE_500, ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN, FAILURE_STATUS, SUCCESS_STATUS } from "./base"
 import { generatePaginationParamExample, generateParamExample, generateSwaggerRequestExample, generateSwaggerResponseExample } from "./utils"
-import { ProductSchema, ProductsResponseSchema } from "../schemas/shop"
+import { ProductsResponseSchema } from "../schemas/shop"
 import { ErrorCode } from "../config/handlers"
 
 const tags = ["Sellers"]

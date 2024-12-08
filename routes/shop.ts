@@ -1,13 +1,14 @@
 import { NextFunction, Request, Response, Router } from "express";
 import { paginateModel, paginateRecords } from "../config/paginators";
-import { Category, Product, Wishlist } from "../models/shop";
+import { Category, IReview, Product, Review, Wishlist } from "../models/shop";
 import { SELLER_POPULATION } from "../managers/users";
 import { CustomResponse } from "../config/utils";
-import { CategorySchema, ProductSchema, ProductsResponseSchema, ReviewCreateSchema, ReviewSchema, WishlistCreateSchema } from "../schemas/shop";
+import { CategorySchema, ProductDetailSchema, ProductsResponseSchema, ReviewCreateSchema, ReviewSchema, WishlistCreateSchema } from "../schemas/shop";
 import { NotFoundError } from "../config/handlers";
 import { authMiddleware, authOrGuestMiddleware } from "../middlewares/auth";
 import { validationMiddleware } from "../middlewares/error";
 import { getProducts } from "../managers/shop";
+import { getAvgRating } from "../models/utils";
 
 const shopRouter = Router();
 
@@ -39,7 +40,12 @@ shopRouter.get('/products/:slug', authOrGuestMiddleware, async (req: Request, re
         const product = await Product.findOne({ slug: req.params.slug }).populate([SELLER_POPULATION, "category"])
         if (!product) throw new NotFoundError("Product does not exist!")
         product.wishlisted = (await Wishlist.exists({ product: product._id, $or: [{ user: user._id }, { guest: user._id }] })) ? true : false
-        return res.status(200).json(CustomResponse.success('Product Details Fetched Successfully', product, ProductSchema))
+        
+        // Set reviews count & avgRating
+        const data = await paginateModel(req, Review, { product: product._id }, "user", { rating: -1 } )
+        product.avgRating = getAvgRating(data.items as IReview[])
+        product.reviews = data
+        return res.status(200).json(CustomResponse.success('Product Details Fetched Successfully', product, ProductDetailSchema))
     } catch (error) {
         next(error)
     }
@@ -52,22 +58,22 @@ shopRouter.get('/products/:slug', authOrGuestMiddleware, async (req: Request, re
 shopRouter.post('/products/:slug', authMiddleware, validationMiddleware(ReviewCreateSchema), async (req: Request, res: Response, next: NextFunction) => {
     try {
         const user = req.user
-        const product = await Product.findOne({ slug: req.params.slug })
+        const product = await Product.findOne({ slug: req.params.slug, isApproved: true })
         if (!product) throw new NotFoundError("Product does not exist!")
 
         const { rating, text } = req.body
 
-        let review = product.reviews.find((review: any) => review.user = user._id)
+        let review = await Review.findOne({ product: product._id, user: user._id }).populate("user")
         let action = "Added" 
         if (review) {
             review.text = text
             review.rating = rating
+            await review.save()
             action = "Updated"
         } else {
-            product.reviews.push({ user: user._id, text, rating })
+            review = await Review.create({ user: user._id, product: product._id, text, rating })
+            review.user = user
         }
-        await product.save()
-        review = { user, text, rating }
         return res.status(200).json(CustomResponse.success(
             `Review ${action} Successfully`, review, ReviewSchema
         ))

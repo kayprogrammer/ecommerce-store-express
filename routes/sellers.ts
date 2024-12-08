@@ -10,7 +10,7 @@ import { Category, Product } from "../models/shop";
 import { NotFoundError, ValidationErr } from "../config/handlers";
 import { paginateModel } from "../config/paginators";
 import { SELLER_POPULATION } from "../managers/users";
-import { ProductSchema, ProductsResponseSchema } from "../schemas/shop";
+import { ProductsResponseSchema } from "../schemas/shop";
 
 const sellerRouter = Router();
 
