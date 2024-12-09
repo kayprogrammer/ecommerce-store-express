@@ -1,5 +1,5 @@
 import { ErrorCode } from "../config/handlers"
-import { CategorySchema, ProductDetailSchema, ProductListSchema, ProductsResponseSchema, ReviewCreateSchema, ReviewSchema, WishlistCreateSchema } from "../schemas/shop"
+import { AddToCartSchema, CategorySchema, OrderItemSchema, ProductDetailSchema, ProductListSchema, ProductsResponseSchema, ReviewCreateSchema, ReviewSchema, WishlistCreateSchema } from "../schemas/shop"
 import { ERROR_EXAMPLE_422, ERROR_EXAMPLE_500, ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN, FAILURE_STATUS, SUCCESS_STATUS } from "./base"
 import { generatePaginationParamExample, generateParamExample, generateSwaggerRequestExample, generateSwaggerResponseExample } from "./utils"
 
@@ -127,4 +127,36 @@ const categoryProductsDocs = {
     }
 }
 
-export { productsDocs, productDocs, wishlistDocs, categoriesDocs, categoryProductsDocs }
+const cartDocs = {
+    get: {
+        tags,
+        summary: "Get all items in user's cart",
+        description: `
+            Allows users to retrieve items in their cart.
+        `,
+        security: [{ BearerAuth: [] }],
+        responses: {
+            200: generateSwaggerResponseExample('Cart Successful Response', SUCCESS_STATUS, "Cart Fetched Successfully", OrderItemSchema, null, true),
+            401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
+            500: ERROR_EXAMPLE_500
+        }
+    },
+    post: {
+        tags,
+        summary: 'Add/Update/Remove item to & from cart.',
+        description: `
+            Allows users to add/update/remove item to, in and from cart.
+            To remove the item from cart. Just set the quantity to 0
+        `,
+        requestBody: generateSwaggerRequestExample("Item", AddToCartSchema),
+        security: [{ BearerAuth: [] }],
+        responses: {
+            200: generateSwaggerResponseExample('OrderItem added/updated/removed Successful Response', SUCCESS_STATUS, "Orderitem Added Successfully"),
+            401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
+            422: ERROR_EXAMPLE_422,
+            500: ERROR_EXAMPLE_500
+        }
+    }
+}
+
+export { productsDocs, productDocs, wishlistDocs, categoriesDocs, categoryProductsDocs, cartDocs }
