@@ -1,6 +1,7 @@
 import { PipelineStage } from "mongoose";
 import { IGuest, IUser } from "../models/accounts";
-import { Product } from "../models/shop";
+import { IOrderItem, OrderItem, Product } from "../models/shop";
+import { Types } from "mongoose";
 
 const getProducts = async (user: IUser | IGuest, filter: Record<string,any> | null = null) => {
     try {
@@ -79,4 +80,72 @@ const getProducts = async (user: IUser | IGuest, filter: Record<string,any> | nu
     }
 }
 
-export { getProducts }
+const getOrderItems = async (user: IUser | IGuest, orderId: Types.ObjectId | null = null): Promise<IOrderItem[]> => {
+    const pipeline = [
+        { $match: { $or: [{ user: user._id }, { guest: user._id }], order: orderId } },
+        {
+            $lookup: {
+                from: "products", // Join with the Product collection
+                localField: "product", // Field in OrderItem referring to Product
+                foreignField: "_id", // Field in Product being matched
+                as: "product"
+            }
+        },
+        {
+            $unwind: "$product" // Unwind product as each OrderItem has one product
+        },
+        {
+            $lookup: {
+                from: "sellers", // Join with the seller collection
+                localField: "product.seller", // Field in Product referring to seller
+                foreignField: "_id", // Field in seller being matched
+                as: "product.seller"
+            }
+        },
+        {
+            $unwind: "$product.seller" // Unwind sellerDetails
+        },
+        {
+            $addFields: {
+                variant: {
+                    $arrayElemAt: [
+                        {
+                            $filter: {
+                                input: "$product.variants", // Access variants array in product
+                                as: "variant",
+                                cond: { $eq: ["$$variant._id", "$variant"] } // Match the variant by ID
+                            }
+                        },
+                        0 // Extract the first matched variant
+                    ]
+                }
+            }
+        },
+        {
+            $addFields: {
+                // Calculate total price based on quantity and variant or product price
+                total: {
+                    $cond: {
+                        if: { $ifNull: ["$variant", false] }, // Check if the variant exists
+                        then: { $multiply: ["$quantity", "$variant.price"] }, // Multiply quantity by variant price
+                        else: { $multiply: ["$quantity", "$product.priceCurrent"] } // Multiply quantity by product price
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                product: {
+                    _id: 1, seller: { name: 1, slug: 1, image: 1 },
+                    name: 1, slug: 1, priceCurrent: 1, image1: 1
+                },
+                variant: { _id: 1, size: 1, color: 1, stock: 1, image: 1, price: 1 },
+                quantity: 1, total: 1
+            }
+        }
+    ];
+    const orderitems = await OrderItem.aggregate(pipeline);
+    return orderitems
+}
+
+export { getProducts, getOrderItems }

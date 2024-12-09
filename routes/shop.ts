@@ -3,11 +3,11 @@ import { paginateModel, paginateRecords } from "../config/paginators";
 import { Category, IReview, Product, Review, Wishlist } from "../models/shop";
 import { SELLER_POPULATION } from "../managers/users";
 import { CustomResponse } from "../config/utils";
-import { CategorySchema, ProductDetailSchema, ProductsResponseSchema, ReviewCreateSchema, ReviewSchema, WishlistCreateSchema } from "../schemas/shop";
+import { CategorySchema, OrderItemSchema, ProductDetailSchema, ProductsResponseSchema, ReviewCreateSchema, ReviewSchema, WishlistCreateSchema } from "../schemas/shop";
 import { NotFoundError } from "../config/handlers";
 import { authMiddleware, authOrGuestMiddleware } from "../middlewares/auth";
 import { validationMiddleware } from "../middlewares/error";
-import { getProducts } from "../managers/shop";
+import { getOrderItems, getProducts } from "../managers/shop";
 import { getAvgRating } from "../models/utils";
 
 const shopRouter = Router();
@@ -159,5 +159,18 @@ shopRouter.get('/categories/:slug', authOrGuestMiddleware, async (req: Request, 
     }
 });
 
+/**
+ * @route GET /cart
+ * @description Return guest or user's cart.
+ */
+shopRouter.get('/cart', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user_
+        const orderitems = await getOrderItems(user)
+        return res.status(200).json(CustomResponse.success('Orderitems Fetched Successfully', orderitems, OrderItemSchema))
+    } catch (error) {
+        next(error)
+    }
+});
 
 export default shopRouter
