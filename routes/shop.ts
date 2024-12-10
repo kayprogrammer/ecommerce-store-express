@@ -1,10 +1,10 @@
 import { NextFunction, Request, Response, Router } from "express";
 import { paginateModel, paginateRecords } from "../config/paginators";
-import { Category, IReview, Product, Review, Wishlist } from "../models/shop";
+import { Category, IReview, OrderItem, Product, Review, Wishlist } from "../models/shop";
 import { SELLER_POPULATION } from "../managers/users";
 import { CustomResponse } from "../config/utils";
-import { CategorySchema, OrderItemSchema, ProductDetailSchema, ProductsResponseSchema, ReviewCreateSchema, ReviewSchema, WishlistCreateSchema } from "../schemas/shop";
-import { NotFoundError } from "../config/handlers";
+import { AddToCartSchema, CategorySchema, OrderItemSchema, ProductDetailSchema, ProductsResponseSchema, ReviewCreateSchema, ReviewSchema, WishlistCreateSchema } from "../schemas/shop";
+import { NotFoundError, ValidationErr } from "../config/handlers";
 import { authMiddleware, authOrGuestMiddleware } from "../middlewares/auth";
 import { validationMiddleware } from "../middlewares/error";
 import { getOrderItems, getProducts } from "../managers/shop";
@@ -168,6 +168,50 @@ shopRouter.get('/cart', authMiddleware, async (req: Request, res: Response, next
         const user = req.user_
         const orderitems = await getOrderItems(user)
         return res.status(200).json(CustomResponse.success('Orderitems Fetched Successfully', orderitems, OrderItemSchema))
+    } catch (error) {
+        next(error)
+    }
+});
+
+/**
+ * @route POST /cart
+ * @description Add/Update/Remove item to & from cart.
+ */
+shopRouter.post('/cart', authMiddleware, validationMiddleware(AddToCartSchema), async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user_
+        const { slug, quantity, variantId } = req.body
+        const product = await Product.findOne({ slug })
+        const userKey = 'email' in user ? "user" : "guest"
+        const dataToCreate: Record<string, any> = { [userKey]: user._id };
+        if (!product) throw new ValidationErr("slug", "Product does not exist")
+        if (variantId) {
+            const variant = product.variants.find((variant) => variant._id.toString() === variantId)
+            if (!variant) throw new ValidationErr("variantId", "Product has no variants with that ID")
+            if (quantity > variant.stock) throw new ValidationErr("quantity", "Quantity out of range for the particular variant")
+            dataToCreate.variant = variantId
+        } else {
+            if (product.variants.length > 0) throw new ValidationErr("variantId", "Please add a variant")
+            if (quantity > product.generalStock) throw new ValidationErr("quantity", "Quantity out of range")
+        }
+        let responseMessageSubstring = "Updated In"
+        if (quantity === 0) {
+            // Remove from cart
+            await OrderItem.deleteOne({ [userKey]: user._id, product: product._id })
+            responseMessageSubstring = "Removed From"
+        } else {
+            // Update Orderitem
+            const orderitem = await OrderItem.findOneAndUpdate(
+                { [userKey]: user._id, product: product._id, variant: variantId, order: null },
+                { quantity, variant: variantId }
+            )
+            if (!orderitem) {
+                // Create Orderitem
+                await OrderItem.create({ [userKey]: user._id, product: product._id, quantity, variant: variantId }) 
+                responseMessageSubstring = "Added To"
+            }
+        }
+        return res.status(200).json(CustomResponse.success(`Orderitem ${responseMessageSubstring} Cart Successfully`))
     } catch (error) {
         next(error)
     }

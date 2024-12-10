@@ -25,6 +25,7 @@ const CategorySchema = new Schema<ICategory>({
 const Category = model<ICategory>('Category', CategorySchema);
 
 interface IVariant {
+    _id: Types.ObjectId;
     size: SIZE_CHOICES, 
     color: COLOR_CHOICES, 
     stock: number, 
@@ -73,13 +74,23 @@ const ProductSchema = new Schema<IProduct>({
         }
     },
 
-    variants: [{ 
-        size: { type: String, enum: SIZE_CHOICES, required: false }, 
-        color: { type: String, enum: COLOR_CHOICES, required: false },
-        stock: { type: Number, default: 1 },
-        image: { type: String, required: false },
-        price: { type: Number, required: true },
-    }],
+    variants: {
+        type: [
+            new Schema({
+                size: { type: String, enum: SIZE_CHOICES, default: null },
+                color: { type: String, enum: COLOR_CHOICES, default: null },
+                stock: { type: Number, required: true },
+                image: { type: String, default: null },
+                price: { type: Number, required: true }
+            })
+        ],
+        validate: {
+            validator: function (value) {
+                return value.length <= 20;
+            },
+            message: 'A product cannot have more than 20 variants.'
+        }
+    },
     image1: { type: String, required: true },
     image2: { type: String, default: null },
     image3: { type: String, default: null },
