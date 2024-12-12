@@ -217,4 +217,21 @@ shopRouter.post('/cart', authMiddleware, validationMiddleware(AddToCartSchema), 
     }
 });
 
+/**
+ * @route POST /checkout
+ * @description Create/Confirm an order.
+ */
+shopRouter.post('/checkout', authMiddleware, validationMiddleware(CheckoutSchema), async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user
+        const { shippingId } = req.body
+        const shippingAddress = await ShippingAddress.findOne({ user: user._id, _id: shippingId }).populate("country_").select("-country_ -user")
+        if (!shippingAddress) throw new NotFoundError("User has no shipping address with that ID")
+        const order = await confirmOrder(user, shippingAddress)
+        return res.status(201).json(CustomResponse.success(`Order created successfully`, order, OrderSchema))
+    } catch (error) {
+        next(error)
+    }
+});
+
 export default shopRouter
