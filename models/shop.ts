@@ -6,7 +6,7 @@ import { COLOR_CHOICES, DELIVERY_STATUS_CHOICES, PAYMENT_STATUS_CHOICES, RATING_
 import { IGuest, IUser } from "./accounts";
 import slugify from "slugify";
 import mongoose from "mongoose";
-import { generateRandomCode, generateRandomNumber, generateUniqueCode } from "./utils";
+import { generateRandomNumber, generateUniqueCode } from "./utils";
 
 // Define the interface for the Category model
 interface ICategory extends IBase {
@@ -207,6 +207,7 @@ interface IOrder extends IBase {
     coupon: Types.ObjectId | ICoupon | null; 
     dateDelivered: Date | null;
     shippingDetails: IShippingAddress;
+    orderItems: IOrderItem[];
 }
 
 // Create the Order schema

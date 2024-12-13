@@ -1,7 +1,9 @@
-import { PipelineStage } from "mongoose";
+import mongoose, { PipelineStage } from "mongoose";
 import { IGuest, IUser } from "../models/accounts";
-import { IOrderItem, OrderItem, Product } from "../models/shop";
+import { IOrder, IOrderItem, Order, OrderItem, Product } from "../models/shop";
 import { Types } from "mongoose";
+import { IShippingAddress } from "../models/profiles";
+import { NotFoundError } from "../config/handlers";
 
 const getProducts = async (user: IUser | IGuest, filter: Record<string,any> | null = null) => {
     try {
@@ -148,4 +150,79 @@ const getOrderItems = async (user: IUser | IGuest, orderId: Types.ObjectId | nul
     return orderitems
 }
 
-export { getProducts, getOrderItems }
+const confirmOrder = async (user: IUser, shippingDetails: IShippingAddress): Promise<IOrder> => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        // Step 1: Fetch all order items with their product and variant details
+        const orderItems = await getOrderItems(user);
+
+        if (orderItems.length === 0) throw new NotFoundError("No items in cart")
+        const order = await Order.create(
+            [
+                {
+                    user: user._id,
+                    shippingDetails,
+                },
+            ],
+            { session }
+        );
+
+        // Step 2: Prepare bulk update operations
+        const productBulkOps = [];
+        const variantBulkOps = [];
+
+        for (const item of orderItems) {
+            const { product, variant, quantity } = item;
+            if (variant) {
+                // Update specific variant's stock
+                variantBulkOps.push({
+                    updateOne: {
+                        filter: { "_id": product._id, "variants._id": variant._id },
+                        update: { $inc: { "variants.$.stock": -quantity } },
+                    },
+                });
+            } else {
+                // Update general product stock
+                productBulkOps.push({
+                    updateOne: {
+                        filter: { "_id": product._id },
+                        update: { $inc: { generalStock: -quantity } },
+                    },
+                });
+            }
+        }
+
+        // Step 3: Update order reference in OrderItems
+        const orderItemIds = orderItems.map((item) => item._id);
+        await OrderItem.updateMany(
+            { _id: { $in: orderItemIds } },
+            { $set: { order: order[0]._id } },
+            { session }
+        );
+
+        // Step 4: Execute bulk updates
+        if (productBulkOps.length > 0) {
+            await Product.bulkWrite(productBulkOps, { session });
+        }
+        if (variantBulkOps.length > 0) {
+            await Product.bulkWrite(variantBulkOps, { session });
+        }
+
+
+        // Commit the transaction
+        await session.commitTransaction();
+        session.endSession();
+        const orderData = order[0]
+        orderData.orderItems = orderItems
+        return orderData
+    } catch (error) {
+        // Abort the transaction on error
+        await session.abortTransaction();
+        session.endSession();
+        throw error;
+    }
+};
+
+export { getProducts, getOrderItems, confirmOrder }

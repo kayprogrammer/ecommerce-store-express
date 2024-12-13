@@ -3,12 +3,13 @@ import { paginateModel, paginateRecords } from "../config/paginators";
 import { Category, IReview, OrderItem, Product, Review, Wishlist } from "../models/shop";
 import { SELLER_POPULATION } from "../managers/users";
 import { CustomResponse } from "../config/utils";
-import { AddToCartSchema, CategorySchema, OrderItemSchema, ProductDetailSchema, ProductsResponseSchema, ReviewCreateSchema, ReviewSchema, WishlistCreateSchema } from "../schemas/shop";
+import { AddToCartSchema, CategorySchema, CheckoutSchema, OrderItemSchema, OrderSchema, ProductDetailSchema, ProductsResponseSchema, ReviewCreateSchema, ReviewSchema, WishlistCreateSchema } from "../schemas/shop";
 import { NotFoundError, ValidationErr } from "../config/handlers";
 import { authMiddleware, authOrGuestMiddleware } from "../middlewares/auth";
 import { validationMiddleware } from "../middlewares/error";
-import { getOrderItems, getProducts } from "../managers/shop";
+import { confirmOrder, getOrderItems, getProducts } from "../managers/shop";
 import { getAvgRating } from "../models/utils";
+import { ShippingAddress } from "../models/profiles";
 
 const shopRouter = Router();
 
