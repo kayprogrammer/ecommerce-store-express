@@ -35,6 +35,7 @@ const sellerProductsDocs = {
         `,
         parameters: [
             generateParamExample("slug", "Slug of the seller to fetch", "string", "john-clothing", "path"),
+            generateParamExample("name", "Filter Products By Name", "string", "Shirt"),
             ...generatePaginationParamExample("products")
         ],
         responses: {
