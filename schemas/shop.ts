@@ -1,9 +1,10 @@
 import { Expose, Type } from "class-transformer";
 import { Example } from "./utils";
-import { COLOR_CHOICES, RATING_CHOICES, SIZE_CHOICES } from "../models/choices";
+import { COLOR_CHOICES, DELIVERY_STATUS_CHOICES, PAYMENT_STATUS_CHOICES, RATING_CHOICES, SIZE_CHOICES } from "../models/choices";
 import { generateSwaggerExampleFromSchema } from "../docs/utils";
 import { DATETIME_EXAMPLE, ID_EXAMPLE, PaginatedResponseSchema, UserSchema } from "./base";
 import { IsEnum, IsMongoId, IsOptional, Length } from "class-validator";
+import { ShippingAddressBaseSchema } from "./profiles";
 
 export class VendorSchema {
     @Expose()
@@ -247,5 +248,38 @@ export class CheckoutSchema {
 }
 
 export class OrderSchema {
+    @Expose()
+    @Example("AJSJSJ2J2J32HSDKSK")
+    txRef?: string;
     
+    @Expose()
+    @Example(PAYMENT_STATUS_CHOICES.PENDING)
+    paymentStatus?: PAYMENT_STATUS_CHOICES;
+    
+    @Expose()
+    @Example(DELIVERY_STATUS_CHOICES.PENDING)
+    deliveryStatus?: DELIVERY_STATUS_CHOICES;
+    
+    @Expose()
+    @Example(DATETIME_EXAMPLE)
+    dateDelivered?: Date;
+    
+    @Expose()
+    shippingDetails?: ShippingAddressBaseSchema;
+    
+    @Expose()
+    @Example("15000")
+    total?: number;
+
+    @Expose()
+    @Type(() => OrderItemSchema)
+    @Example([generateSwaggerExampleFromSchema(OrderItemSchema)])
+    orderItems?: OrderItemSchema[]
+}
+
+export class OrdersResponseSchema extends PaginatedResponseSchema {
+    @Expose()
+    @Type(() => OrderSchema)
+    @Example([generateSwaggerExampleFromSchema(OrderSchema)])
+    orders?: OrderSchema[]
 }

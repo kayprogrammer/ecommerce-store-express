@@ -225,4 +225,98 @@ const confirmOrder = async (user: IUser, shippingDetails: IShippingAddress): Pro
     }
 };
 
-export { getProducts, getOrderItems, confirmOrder }
+const getOrdersWithDetailedOrderItems = async (filter: Record<string,any>) => {
+    const pipeline: PipelineStage[] = [
+        { $match: filter },
+        { $sort: { createdAt: -1 } },
+
+        // Lookup orderItems related to the order
+        {
+            $lookup: {
+                from: "orderitems", localField: "_id", foreignField: "order", as: "orderItems"
+            }
+        },
+        // Unwind the orderItems array
+        { $unwind: { path: "$orderItems", preserveNullAndEmptyArrays: true } },
+
+        // Lookup product data for each orderItem
+        {
+            $lookup: {
+                from: "products", localField: "orderItems.product", 
+                foreignField: "_id", as: "orderItems.product",
+            }
+        },
+        // Unwind the product array
+        { $unwind: { path: "$orderItems.product", preserveNullAndEmptyArrays: true } },
+
+        // Lookup seller data for the product's seller
+        {
+            $lookup: {
+                from: "sellers", localField: "orderItems.product.seller",
+                foreignField: "_id", as: "orderItems.product.seller",
+            },
+        },
+        // Unwind the seller array
+        { $unwind: { path: "$orderItems.product.seller", preserveNullAndEmptyArrays: true } },
+
+        // Add calculated fields for variants and total price
+        {
+            $addFields: {
+                "orderItems.variant": {
+                    $arrayElemAt: [
+                        {
+                            $filter: {
+                                input: "$orderItems.product.variants",
+                                as: "variant",
+                                cond: { $eq: ["$$variant._id", "$orderItems.variant"] },
+                            }
+                        },
+                        0 // Take the first matched variant
+                    ]
+                }
+            }
+        },
+        {
+            $addFields: {
+                "orderItems.total": {
+                    $cond: {
+                        if: { $ifNull: ["$orderItems.variant", false] },
+                        then: { $multiply: ["$orderItems.quantity", "$orderItems.variant.price"] },
+                        else: { $multiply: ["$orderItems.quantity", "$orderItems.product.priceCurrent"] },
+                    }
+                }
+            }
+        },
+        // Group back to include all orderItems in a single order
+        {
+            $group: {
+                _id: "$_id", // Group by order ID
+                txRef: { $first: "$txRef" },
+                paymentStatus: { $first: "$paymentStatus" },
+                deliveryStatus: { $first: "$deliveryStatus" },
+                dateDelivered: { $first: "$dateDelivered" },
+                shippingDetails: { $first: "$shippingDetails" },
+                createdAt: { $first: "$createdAt" },
+                updatedAt: { $first: "$updatedAt" },
+                orderItems: { $push: "$orderItems" }, // Push populated orderItems
+            }
+        },
+        // Add the order-level total
+        {
+            $addFields: {
+                total: {
+                    $reduce: {
+                        input: "$orderItems",
+                        initialValue: 0,
+                        in: { $add: ["$$value", "$$this.total"] },
+                    },
+                },
+            },
+        },
+    ]
+
+    const orders = await Order.aggregate(pipeline);
+    return orders;
+};
+
+export { getProducts, getOrderItems, confirmOrder, getOrdersWithDetailedOrderItems }

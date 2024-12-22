@@ -57,15 +57,7 @@ export class CountrySchema {
     code?: string;
 }
 
-export class ShippingAddressSchema {
-    @Expose()
-    @Example(generateSwaggerExampleFromSchema(UserSchema))
-    user?: UserSchema;
-
-    @Expose()
-    @Example(ID_EXAMPLE)
-    id?: string;
-
+export class ShippingAddressBaseSchema {
     @Expose()
     @Example("John Doe")
     name?: string;
@@ -97,6 +89,15 @@ export class ShippingAddressSchema {
     @Expose()
     @Example(123456)
     zipcode?: number;   
+}
+
+export class ShippingAddressSchema extends ShippingAddressBaseSchema {
+    @Expose()
+    user?: UserSchema;
+
+    @Expose()
+    @Example(ID_EXAMPLE)
+    id?: string;
 }
 
 export class ShippingAddressInputSchema {
