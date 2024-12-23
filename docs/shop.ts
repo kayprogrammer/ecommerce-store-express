@@ -1,5 +1,6 @@
 import { ErrorCode } from "../config/handlers"
-import { AddToCartSchema, CategorySchema, OrderItemSchema, ProductDetailSchema, ProductListSchema, ProductsResponseSchema, ReviewCreateSchema, ReviewSchema, WishlistCreateSchema } from "../schemas/shop"
+import { DELIVERY_STATUS_CHOICES, PAYMENT_STATUS_CHOICES } from "../models/choices"
+import { AddToCartSchema, CategorySchema, CheckoutSchema, OrderItemSchema, OrderSchema, OrdersResponseSchema, ProductDetailSchema, ProductListSchema, ProductsResponseSchema, ReviewCreateSchema, ReviewSchema, WishlistCreateSchema } from "../schemas/shop"
 import { ERROR_EXAMPLE_422, ERROR_EXAMPLE_500, ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN, FAILURE_STATUS, SUCCESS_STATUS } from "./base"
 import { generatePaginationParamExample, generateParamExample, generateSwaggerRequestExample, generateSwaggerResponseExample } from "./utils"
 
@@ -159,4 +160,44 @@ const cartDocs = {
     }
 }
 
-export { productsDocs, productDocs, wishlistDocs, categoriesDocs, categoryProductsDocs, cartDocs }
+const checkoutDocs = {
+    post: {
+        tags,
+        summary: 'Create/Confirm an order.',
+        description: `
+            Allows users to create/confirm an order.
+        `,
+        requestBody: generateSwaggerRequestExample("Checkout", CheckoutSchema),
+        security: [{ BearerAuth: [] }],
+        responses: {
+            201: generateSwaggerResponseExample('Order created successfully Response', SUCCESS_STATUS, "Order created successfully", OrderSchema),
+            401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
+            404: generateSwaggerResponseExample('Not Found Response', FAILURE_STATUS, "User has no shipping address with that ID!", null, ErrorCode.NON_EXISTENT),
+            422: ERROR_EXAMPLE_422,
+            500: ERROR_EXAMPLE_500
+        }
+    }
+}
+
+const orderDocs = {
+    get: {
+        tags,
+        summary: "Get all orders for a user",
+        description: `
+            Allows users to retrieve all their orders.
+        `,
+        security: [{ BearerAuth: [] }],
+        parameters: [
+            generateParamExample("paymentStatus", "Payment status of the order", 'string', PAYMENT_STATUS_CHOICES.PENDING),
+            generateParamExample("deliveryStatus", "Delivery status of the order", 'string', DELIVERY_STATUS_CHOICES.PENDING),
+            ...generatePaginationParamExample("orders")
+        ],
+        responses: {
+            200: generateSwaggerResponseExample('Orders Successful Response', SUCCESS_STATUS, "Orders Fetched Successfully", OrdersResponseSchema),
+            401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
+            500: ERROR_EXAMPLE_500
+        }
+    }
+}
+
+export { productsDocs, productDocs, wishlistDocs, categoriesDocs, categoryProductsDocs, cartDocs, checkoutDocs, orderDocs }
