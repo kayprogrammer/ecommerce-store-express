@@ -5,9 +5,10 @@ import { Types } from "mongoose";
 import { IShippingAddress } from "../models/profiles";
 import { NotFoundError } from "../config/handlers";
 
-const getProducts = async (user: IUser | IGuest, filter: Record<string,any> | null = null) => {
+const getProducts = async (user: IUser | IGuest | null, filter: Record<string,any> | null = null) => {
     try {
-        const userOrGuestMatch = [{[ "email" in user ? "user" : "guest" ]: user._id}];
+        let userOrGuestMatch: Record<string,any>[] = [];
+        if (user) userOrGuestMatch = [{[ "email" in user ? "user" : "guest" ]: user._id}];
         const aggregateData: PipelineStage[] = [
             // Add reviewsCount and avgRating
             {

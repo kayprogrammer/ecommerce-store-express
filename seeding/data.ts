@@ -13,7 +13,7 @@ import { ISeller, Seller } from "../models/sellers"
 import * as path from "path";
 import * as fs from "fs";
 import { uploadFileToCloudinary } from "../config/file_processor"
-import { FILE_FOLDER_CHOICES } from "../models/choices"
+import { FILE_FOLDER_CHOICES, SELLER_STATUS_CHOICES } from "../models/choices"
 import { getRandomItem } from "../config/utils"
 
 // Define base directory
@@ -106,7 +106,7 @@ const createProducts = async (seller: ISeller, categories: ICategory[]): Promise
 
 const createSeller = async (admin: IUser, country: ICountry, category: ICategory): Promise<ISeller> => {
     let seller = await Seller.findOne({ user: admin._id })
-    if (!seller) seller = await Seller.create({ user: admin._id, country_: country._id, productCategories: [category._id], isApproved: true, ...seedData.seller })
+    if (!seller) seller = await Seller.create({ user: admin._id, country_: country._id, productCategories: [category._id], status: SELLER_STATUS_CHOICES.APPROVED, ...seedData.seller })
     return seller
 }
 

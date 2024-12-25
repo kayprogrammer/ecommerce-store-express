@@ -1,6 +1,6 @@
 import mongoose, { model, Schema, Types } from "mongoose";
 import { IBase } from "./base";
-import { BUSINESS_TYPE_CHOICES } from "./choices";
+import { BUSINESS_TYPE_CHOICES, SELLER_STATUS_CHOICES } from "./choices";
 import { ICountry } from "./profiles";
 import { IUser } from "./accounts";
 import slugify from "slugify";
@@ -40,7 +40,7 @@ interface ISeller extends IBase {
 
     productCategories: Types.ObjectId[];
 
-    isApproved: boolean;
+    status: SELLER_STATUS_CHOICES;
 
 }
   
@@ -74,7 +74,7 @@ const SellerSchema = new Schema<ISeller>({
 
     productCategories: [{ type: Schema.Types.ObjectId, required: true }],
 
-    isApproved: { type: Boolean, default: false },
+    status: { type: String, enum: SELLER_STATUS_CHOICES, default: SELLER_STATUS_CHOICES.PENDING },
 }, { timestamps: true });
   
 SellerSchema.virtual('country').get(function(this: ISeller) {

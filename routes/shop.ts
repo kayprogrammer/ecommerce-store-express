@@ -59,7 +59,7 @@ shopRouter.get('/products/:slug', authOrGuestMiddleware, async (req: Request, re
 shopRouter.post('/products/:slug', authMiddleware, validationMiddleware(ReviewCreateSchema), async (req: Request, res: Response, next: NextFunction) => {
     try {
         const user = req.user
-        const product = await Product.findOne({ slug: req.params.slug, isApproved: true })
+        const product = await Product.findOne({ slug: req.params.slug })
         if (!product) throw new NotFoundError("Product does not exist!")
 
         const { rating, text } = req.body

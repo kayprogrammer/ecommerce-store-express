@@ -1,8 +1,10 @@
-import { Expose, Transform } from "class-transformer";
+import { Expose, Transform, Type } from "class-transformer";
 import { BUSINESS_TYPE_CHOICES } from "../models/choices";
 import { Example } from "./utils";
-import { ID_EXAMPLE } from "./base";
+import { ID_EXAMPLE, PaginatedResponseSchema } from "./base";
 import { IsArray, IsEmail, IsEnum, IsMongoId, IsNumberString, IsPhoneNumber, IsString, IsTaxId, Length } from "class-validator";
+import { ProductDetailSchema, ProductListSchema } from "./shop";
+import { generateSwaggerExampleFromSchema } from "../docs/utils";
 
 
 export class SellerApplicationSchema {

@@ -7,10 +7,12 @@ import { FILE_FOLDER_CHOICES, FILE_SIZE_CHOICES } from "../models/choices";
 import { CustomResponse, setDictAttr } from "../config/utils";
 import { ISeller, Seller } from "../models/sellers";
 import { Category, Product } from "../models/shop";
-import { NotFoundError, ValidationErr } from "../config/handlers";
-import { paginateModel } from "../config/paginators";
+import { InvalidParamError, NotFoundError, ValidationErr } from "../config/handlers";
+import { paginateModel, paginateRecords } from "../config/paginators";
 import { SELLER_POPULATION } from "../managers/users";
 import { ProductsResponseSchema } from "../schemas/shop";
+import { isPartOfEnum } from "./utils";
+import { getProducts } from "../managers/shop";
 
 const sellerRouter = Router();
 
@@ -66,14 +68,19 @@ sellerRouter.post('/application',
 });
 
 /**
- * @route GET /products/:slug
- * @description Return all products belonging to a seller.
+ * @route GET /products
+ * @description Return all products belonging to a seller by a seller.
  */
-sellerRouter.get('/products/:slug', async (req: Request, res: Response, next: NextFunction) => {
+sellerRouter.get('/products', sellerMiddleware, async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const seller = await Seller.findOne({ slug: req.params.slug, isApproved: true })
-        if (!seller) throw new NotFoundError("No approved seller with that slug")
-        const data = await paginateModel(req, Product, { seller: seller._id,  }, [SELLER_POPULATION, "category"])
+        const user = req.user
+        const { name } = req.query;
+
+        const filter: Record<string,any> = { seller: user.seller._id }
+        if (name) filter.name = { $regex: name, $options: "i" }
+
+        const products = await getProducts(null, filter)
+        const data = await paginateRecords(req, products)
         const productsData = { products: data.items, ...data }
         return res.status(200).json(CustomResponse.success('Seller Products Fetched Successfully', productsData, ProductsResponseSchema))
     } catch (error) {
