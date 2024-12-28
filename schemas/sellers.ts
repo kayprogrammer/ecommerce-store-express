@@ -1,8 +1,8 @@
 import { Expose, Transform, Type } from "class-transformer";
 import { BUSINESS_TYPE_CHOICES } from "../models/choices";
-import { Example } from "./utils";
+import { Example, transformToNumber } from "./utils";
 import { ID_EXAMPLE } from "./base";
-import { IsArray, IsEmail, IsEnum, IsMongoId, IsNumberString, IsPhoneNumber, IsString, IsTaxId, Length } from "class-validator";
+import { IsArray, IsEmail, IsEnum, IsMongoId, IsNotEmpty, IsNumber, IsNumberString, IsOptional, IsPhoneNumber, IsString, IsTaxId, Length, Max, Min } from "class-validator";
 
 
 export class SellerApplicationSchema {
@@ -105,4 +105,55 @@ export class SellerApplicationSchema {
     @IsArray()
     @IsString({ each: true })
     productCategorySlugs?: string[];
+}
+
+export class ProductCreateSchema {
+    @Expose()
+    @Example("Big Shoe")
+    @Length(3, 300)
+    name?: string;
+    
+    @Expose()
+    @Example("This is a really big shoe you should consider getting")
+    @Length(30, 5000)
+    desc?: string;
+    
+    @Expose()
+    @Example(1000)
+    @IsNumber()
+    @Min(1)
+    @Max(100000000000)
+    @Transform(transformToNumber)
+    priceOld?: number;
+    
+    @Expose()
+    @Example(950)
+    @IsNumber()
+    @Min(1)
+    @Max(100000000000)
+    @Transform(transformToNumber)
+    priceCurrent?: number;
+    
+    @Expose()
+    @Example("category")
+    @IsNotEmpty()
+    categorySlug?: string;
+    
+    @Expose()
+    @Example(10)
+    @IsNumber()
+    @Transform(transformToNumber)
+    @Min(0)
+    @Max(1000000)
+    @IsOptional()
+    generalStock?: number;
+    
+    @Expose()
+    image1?: Buffer;
+    
+    @Expose()
+    image2?: Buffer;
+    
+    @Expose()
+    image3?: Buffer;
 }

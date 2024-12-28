@@ -7,6 +7,16 @@ import multer from "multer";
 
 export const validationMiddleware = <T extends object>(type: ClassConstructor<T>) =>
     async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        // If the request is multipart/form-data, convert empty strings to null
+        if (req.is('multipart/form-data')) {
+            // This will iterate over all the fields and set empty strings to null
+            for (const key in req.body) {
+                if (req.body[key] === '') {
+                    req.body[key] = null;
+                }
+            }
+        }
+        
         const instance = plainToInstance(type, req.body);
         const errors: ValidationError[] = await validate(instance);
         if (errors.length > 0) {
@@ -22,9 +32,9 @@ export const validationMiddleware = <T extends object>(type: ClassConstructor<T>
             res.status(422).json(errResp)
             return
         }
+        req.body = instance
         next();
     };
-
 
 /**
  * Centralized error handling middleware
