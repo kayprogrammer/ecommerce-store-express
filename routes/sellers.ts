@@ -6,11 +6,13 @@ import { ProductCreateSchema, SellerApplicationSchema } from "../schemas/sellers
 import { FILE_FOLDER_CHOICES, FILE_SIZE_CHOICES } from "../models/choices";
 import { CustomResponse, setDictAttr } from "../config/utils";
 import { ISeller, Seller } from "../models/sellers";
-import { Category, Product } from "../models/shop";
-import { ValidationErr } from "../config/handlers";
-import { paginateRecords } from "../config/paginators";
+import { Category, IReview, Product, Review } from "../models/shop";
+import { NotFoundError, ValidationErr } from "../config/handlers";
+import { paginateModel, paginateRecords } from "../config/paginators";
 import { ProductDetailSchema, ProductsResponseSchema } from "../schemas/shop";
 import { getProducts } from "../managers/shop";
+import { getAvgRating } from "../models/utils";
+import { SELLER_POPULATION } from "../managers/users";
 
 const sellerRouter = Router();
 
@@ -145,5 +147,25 @@ sellerRouter.post(
         }
     });
 
+    /**
+ * @route GET /products/:slug
+ * @description Return single product.
+ */
+sellerRouter.get('/products/:slug', sellerMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user
+        const product = await Product.findOne({ slug: req.params.slug, seller: user.seller._id }).populate([SELLER_POPULATION, "category"])
+        if (!product) throw new NotFoundError("Seller Product does not exist!")
+        
+        // Set reviews count & avgRating
+        const data = await paginateModel(req, Review, { product: product._id }, "user", { rating: -1 } )
+        product.avgRating = getAvgRating(data.items as IReview[])
+        product.reviews = data
+        await product.save()
+        return res.status(200).json(CustomResponse.success('Seller Product Details Fetched Successfully', product, ProductDetailSchema))
+    } catch (error) {
+        next(error)
+    }
+});
 
 export default sellerRouter;
