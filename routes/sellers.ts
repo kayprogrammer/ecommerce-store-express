@@ -7,11 +7,9 @@ import { FILE_FOLDER_CHOICES, FILE_SIZE_CHOICES } from "../models/choices";
 import { CustomResponse, setDictAttr } from "../config/utils";
 import { ISeller, Seller } from "../models/sellers";
 import { Category, Product } from "../models/shop";
-import { InvalidParamError, NotFoundError, ValidationErr } from "../config/handlers";
-import { paginateModel, paginateRecords } from "../config/paginators";
-import { SELLER_POPULATION } from "../managers/users";
+import { ValidationErr } from "../config/handlers";
+import { paginateRecords } from "../config/paginators";
 import { ProductDetailSchema, ProductsResponseSchema } from "../schemas/shop";
-import { isPartOfEnum } from "./utils";
 import { getProducts } from "../managers/shop";
 
 const sellerRouter = Router();
