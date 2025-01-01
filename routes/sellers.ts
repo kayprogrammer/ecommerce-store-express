@@ -2,11 +2,11 @@ import { NextFunction, Request, Response, Router } from "express";
 import { authMiddleware, sellerMiddleware } from "../middlewares/auth";
 import { upload, uploadFileToCloudinary } from "../config/file_processor";
 import { validationMiddleware } from "../middlewares/error";
-import { ProductCreateSchema, SellerApplicationSchema } from "../schemas/sellers";
+import { ProductCreateSchema, ProductEditSchema, SellerApplicationSchema } from "../schemas/sellers";
 import { FILE_FOLDER_CHOICES, FILE_SIZE_CHOICES } from "../models/choices";
 import { CustomResponse, setDictAttr } from "../config/utils";
 import { ISeller, Seller } from "../models/sellers";
-import { Category, IReview, Product, Review } from "../models/shop";
+import { Category, ICategory, IReview, OrderItem, Product, Review } from "../models/shop";
 import { NotFoundError, ValidationErr } from "../config/handlers";
 import { paginateModel, paginateRecords } from "../config/paginators";
 import { ProductDetailSchema, ProductsResponseSchema } from "../schemas/shop";
@@ -167,5 +167,73 @@ sellerRouter.get('/products/:slug', sellerMiddleware, async (req: Request, res: 
         next(error)
     }
 });
+
+/**
+ * @route PUT /products/:slug
+ * @description Allows a seller to edit a product.
+ */
+sellerRouter.put(
+    '/products/:slug', 
+    sellerMiddleware, 
+    upload(productFileFields, productFileSizes, {}),
+    validationMiddleware(ProductEditSchema), 
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const user = req.user
+            const { name, desc, priceOld, priceCurrent, stock, categorySlug } = req.body
+            const product = await Product.findOne({ seller: user.seller._id, slug: req.params.slug }).populate("category")
+            if (!product) throw new NotFoundError("Product does not exist")
+            const orderitemExists = await OrderItem.exists({ product: product._id, order: { $ne: null } })
+            const dataToUpdate: Record<string,any> = {}
+            if (desc) dataToUpdate.desc = desc
+            if (stock) dataToUpdate.stock = stock
+            const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+            if (orderitemExists) {
+                if (name) throw new ValidationErr("name", "Cannot edit name for product with an existing order.")
+                if (priceOld || priceCurrent) throw new ValidationErr("priceCurrent", "Cannot edit price for product with an existing order.")
+                if (categorySlug && (product.category as ICategory).slug !== categorySlug) throw new ValidationErr("categorySlug", "Cannot change category for product with an existing order.")
+                if (files.image1?.[0] || files.image2?.[0] || files.image3?.[0] ) throw new ValidationErr("image", "Cannot add or change images for product with an existing order.")
+            } else {
+                if (priceOld || priceCurrent) {
+                    const priceOl = priceOld || product.priceOld 
+                    const priceCurr = priceCurrent || product.priceCurrent 
+                    if (priceCurr > priceOl) throw new ValidationErr("priceCurrent", "Cannot be more than old price")
+                    dataToUpdate.priceOld = priceOl
+                    dataToUpdate.priceCurrent = priceCurr
+                } 
+                if (categorySlug) {
+                    const category = await Category.findOne({ slug: categorySlug })
+                    if(!category) throw new ValidationErr("categorySlug", "Invalid category")
+                    dataToUpdate.category = category._id
+                }
+                if (name) dataToUpdate.name = name
+
+                // Handle file uploads
+                const uploadedFiles = await Promise.all(
+                    Object.entries(files).map(async ([fieldname, fileList]) => {
+                        const file = fileList[0];
+                        return { fieldname, url: await uploadFileToCloudinary(file.buffer, FILE_FOLDER_CHOICES.PRODUCT) };
+                    })
+                );
+
+                // Map uploaded file URLs
+                const fileMapping: Record<string, string | null> = {};
+                uploadedFiles.forEach(({ fieldname, url }) => {
+                    fileMapping[fieldname] = url;
+                });
+
+                // Assign uploaded URLs to general product images
+                if (fileMapping.image1) dataToUpdate.image1 = fileMapping.image1;
+                if (fileMapping.image2) dataToUpdate.image2 = fileMapping.image2; 
+                if (fileMapping.image3) dataToUpdate.image3 = fileMapping.image3; 
+            }
+
+            await Product.updateOne({ _id: product._id }, { $set: dataToUpdate } )
+            return res.status(200).json(CustomResponse.success('Product Updated Successfully'))
+        } catch (error) {
+            next(error)
+        }
+    });
 
 export default sellerRouter;

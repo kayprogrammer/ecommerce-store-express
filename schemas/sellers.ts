@@ -157,3 +157,58 @@ export class ProductCreateSchema {
     @Expose()
     image3?: Buffer;
 }
+
+export class ProductEditSchema {
+    @Expose()
+    @Example("Big Shoe")
+    @Length(3, 300)
+    @IsOptional()
+    name?: string;
+    
+    @Expose()
+    @Example("This is a really big shoe you should consider getting")
+    @Length(30, 5000)
+    @IsOptional()
+    desc?: string;
+    
+    @Expose()
+    @Example(1000)
+    @IsOptional()
+    @Min(1)
+    @Max(100000000000)
+    @IsNumber()
+    @Transform(transformToNumber)
+    priceOld?: number;
+    
+    @Expose()
+    @Example(950)
+    @IsOptional()
+    @Min(1)
+    @Max(100000000000)
+    @IsNumber()
+    @Transform(transformToNumber)
+    priceCurrent?: number;
+    
+    @Expose()
+    @Example("category")
+    @IsOptional()
+    categorySlug?: string;
+    
+    @Expose()
+    @Example(10)
+    @IsNumber()
+    @Transform(transformToNumber)
+    @Min(0)
+    @Max(1000000)
+    @IsOptional()
+    stock?: number;
+
+    @Expose()
+    image1?: Buffer;
+    
+    @Expose()
+    image2?: Buffer;
+    
+    @Expose()
+    image3?: Buffer;
+}
