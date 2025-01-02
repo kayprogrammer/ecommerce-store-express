@@ -189,7 +189,7 @@ const confirmOrder = async (user: IUser, shippingDetails: IShippingAddress): Pro
                 productBulkOps.push({
                     updateOne: {
                         filter: { "_id": product._id },
-                        update: { $inc: { generalStock: -quantity } },
+                        update: { $inc: { stock: -quantity } },
                     },
                 });
             }

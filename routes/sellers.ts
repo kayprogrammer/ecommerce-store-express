@@ -109,7 +109,7 @@ sellerRouter.post(
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const user = req.user
-            const { priceOld, priceCurrent, generalStock, categorySlug, ...data } = req.body
+            const { priceOld, priceCurrent, stock, categorySlug, ...data } = req.body
             if (priceCurrent > priceOld) throw new ValidationErr("priceCurrent", "Cannot be more than old price")
             
             const category = await Category.findOne({ slug: categorySlug })
@@ -138,7 +138,7 @@ sellerRouter.post(
             data.image3 = fileMapping.image3;
 
             const seller = user.seller
-            const product = await Product.create({ seller: seller._id, category: category._id, priceOld, priceCurrent, generalStock, ...data })
+            const product = await Product.create({ seller: seller._id, category: category._id, priceOld, priceCurrent, stock, ...data })
             product.seller = seller
             product.category = category
             return res.status(200).json(CustomResponse.success('Product Added Successfully', product, ProductDetailSchema))
@@ -235,5 +235,31 @@ sellerRouter.put(
             next(error)
         }
     });
+
+    /**
+ * @route DELETE /products/:slug
+ * @description Allows a seller to delete a product.
+ */
+sellerRouter.delete(
+    '/products/:slug', 
+    sellerMiddleware, 
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const user = req.user
+            const product = await Product.findOne({ seller: user.seller._id, slug: req.params.slug })
+            if (!product) throw new NotFoundError("Product does not exist")
+            const orderitemExists = await OrderItem.exists({ product: product._id, order: { $ne: null } })
+            if (orderitemExists) {
+                product.stock = 0
+                await product.save()
+            } else {
+                await product.deleteOne({})
+            }
+            return res.status(200).json(CustomResponse.success('Product Deleted Successfully'))
+        } catch (error) {
+            next(error)
+        }
+    });
+
 
 export default sellerRouter;

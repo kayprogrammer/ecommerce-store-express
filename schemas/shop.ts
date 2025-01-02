@@ -149,7 +149,7 @@ export class ProductDetailSchema extends ProductListSchema {
 
     @Expose()
     @Example(10)
-    generalStock?: number;
+    stock?: number;
 
     @Expose()
     @Example([generateSwaggerExampleFromSchema(VariantSchema)])

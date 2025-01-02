@@ -146,7 +146,7 @@ export class ProductCreateSchema {
     @Min(0)
     @Max(1000000)
     @IsOptional()
-    generalStock?: number;
+    stock?: number;
     
     @Expose()
     image1?: Buffer;

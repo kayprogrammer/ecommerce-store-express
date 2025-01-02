@@ -42,8 +42,8 @@ interface IProduct extends IBase {
     priceOld: number;
     priceCurrent: number;
     category: Types.ObjectId | ICategory
-    generalStock: number; // If variants exists then it should be 0
-    variants: IVariant[]; // Image url is for color variants 
+    stock: number; 
+    variants: IVariant[];
     image1: string;
     image2: string;
     image3: string;
@@ -63,11 +63,11 @@ const ProductSchema = new Schema<IProduct>({
     priceOld: { type: Number, default: null },
     priceCurrent: { type: Number, required: true },
     category: { type: Schema.Types.ObjectId, ref: 'Category' },
-    generalStock: { 
+    stock: { 
         type: Number, default: null,
         validate: {
             validator: function (value) {
-                // If there are variants, generalStock should be undefined or 0
+                // If there are variants, stock should be undefined or 0
                 return !this.variants || this.variants.length === 0 || value === 0;
             },
             message: 'General stock should not be set when variants exist.'

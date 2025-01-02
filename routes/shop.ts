@@ -193,7 +193,7 @@ shopRouter.post('/cart', authMiddleware, validationMiddleware(AddToCartSchema), 
             dataToCreate.variant = variantId
         } else {
             if (product.variants.length > 0) throw new ValidationErr("variantId", "Please add a variant")
-            if (quantity > product.generalStock) throw new ValidationErr("quantity", "Quantity out of range")
+            if (quantity > product.stock) throw new ValidationErr("quantity", "Quantity out of range")
         }
         let responseMessageSubstring = "Updated In"
         if (quantity === 0) {
