@@ -1,5 +1,5 @@
 import { Expose, Transform, Type } from "class-transformer";
-import { BUSINESS_TYPE_CHOICES } from "../models/choices";
+import { BUSINESS_TYPE_CHOICES, COLOR_CHOICES, SIZE_CHOICES } from "../models/choices";
 import { Example, transformToNumber } from "./utils";
 import { ID_EXAMPLE } from "./base";
 import { IsArray, IsEmail, IsEnum, IsMongoId, IsNotEmpty, IsNumber, IsNumberString, IsOptional, IsPhoneNumber, IsString, IsTaxId, Length, Max, Min } from "class-validator";
@@ -211,4 +211,82 @@ export class ProductEditSchema {
     
     @Expose()
     image3?: Buffer;
+}
+
+export class VariantCreateSchema {
+    @Expose()
+    @Example(SIZE_CHOICES.M)
+    @IsEnum(SIZE_CHOICES)
+    @IsOptional()
+    size?: SIZE_CHOICES;
+    
+    @Expose()
+    @Example(COLOR_CHOICES.WHITE)
+    @IsEnum(COLOR_CHOICES)
+    @IsOptional()
+    color?: COLOR_CHOICES;
+
+    @Expose()
+    @Example("Ideal for medium-sized machinery, dimensions: 100x100x100cm")
+    @Length(10, 1000)
+    desc?: string;
+    
+    @Expose()
+    @Example(15)
+    @IsNumber()
+    @Transform(transformToNumber)
+    @Min(0)
+    @Max(1000000)
+    stock?: number;
+    
+    @Expose()
+    image?: Buffer;
+
+    @Expose()
+    @Example(20000)
+    @Min(1)
+    @Max(100000000000)
+    @IsNumber()
+    @Transform(transformToNumber)
+    price?: number;
+}
+
+export class VariantEditSchema {
+    @Expose()
+    @Example(SIZE_CHOICES.M)
+    @IsEnum(SIZE_CHOICES)
+    @IsOptional()
+    size?: SIZE_CHOICES;
+    
+    @Expose()
+    @Example(COLOR_CHOICES.WHITE)
+    @IsEnum(COLOR_CHOICES)
+    @IsOptional()
+    color?: COLOR_CHOICES;
+    
+    @Expose()
+    @Example("This is a really big shoe you should consider getting")
+    @Length(10, 1000)
+    @IsOptional()
+    desc?: string;
+
+    @Expose()
+    @Example(15)
+    @IsNumber()
+    @Transform(transformToNumber)
+    @Min(0)
+    @Max(1000000)
+    stock?: number;
+    
+    @Expose()
+    image?: Buffer;
+
+    @Expose()
+    @Example(20000)
+    @Min(1)
+    @Max(100000000000)
+    @IsNumber()
+    @Transform(transformToNumber)
+    @IsOptional()
+    price?: number;
 }

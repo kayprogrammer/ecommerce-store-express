@@ -2,7 +2,7 @@ import { NextFunction, Request, Response, Router } from "express";
 import { authMiddleware, sellerMiddleware } from "../middlewares/auth";
 import { upload, uploadFileToCloudinary } from "../config/file_processor";
 import { validationMiddleware } from "../middlewares/error";
-import { ProductCreateSchema, ProductEditSchema, SellerApplicationSchema } from "../schemas/sellers";
+import { ProductCreateSchema, ProductEditSchema, SellerApplicationSchema, VariantCreateSchema } from "../schemas/sellers";
 import { FILE_FOLDER_CHOICES, FILE_SIZE_CHOICES } from "../models/choices";
 import { CustomResponse, setDictAttr } from "../config/utils";
 import { ISeller, Seller } from "../models/sellers";
@@ -261,5 +261,36 @@ sellerRouter.delete(
         }
     });
 
+const variantFileFields = [{ name: "image" }] as any;
+const variantFileSizes = { image: FILE_SIZE_CHOICES.PRODUCT }
+    
+/**
+ * @route POST /products/:slug
+ * @description Allows a seller to add a variant to a product.
+ */
+sellerRouter.post(
+    '/products/:slug/variants', 
+    sellerMiddleware, 
+    upload(variantFileFields, variantFileSizes, {}),
+    validationMiddleware(VariantCreateSchema), 
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const user = req.user
+            const data = req.body
+            const { size, color } = data
+            if (!size && !color) throw new ValidationErr("color", "Please enter a size or color")
+            const product = await Product.findOne({ seller: user.seller._id, slug: req.params.slug })
+            if(!product) throw new NotFoundError("Product does not exist")
+            
+            // Handle file upload
+            const files = req.files as { [fieldname: string]: Express.Multer.File[] }
+            data.image = await uploadFileToCloudinary(files.image?.[0]?.buffer, FILE_FOLDER_CHOICES.PRODUCT) 
+            product.variants.push(data)
+            await product.save()
+            return res.status(200).json(CustomResponse.success('Variant Added Successfully'))
+        } catch (error) {
+            next(error)
+        }
+    });
 
 export default sellerRouter;
