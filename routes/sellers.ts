@@ -2,14 +2,14 @@ import { NextFunction, Request, Response, Router } from "express";
 import { authMiddleware, sellerMiddleware } from "../middlewares/auth";
 import { upload, uploadFileToCloudinary } from "../config/file_processor";
 import { validationMiddleware } from "../middlewares/error";
-import { ProductCreateSchema, ProductEditSchema, SellerApplicationSchema, VariantCreateSchema } from "../schemas/sellers";
+import { ProductCreateSchema, ProductEditSchema, SellerApplicationSchema, VariantCreateSchema, VariantEditSchema } from "../schemas/sellers";
 import { FILE_FOLDER_CHOICES, FILE_SIZE_CHOICES } from "../models/choices";
 import { CustomResponse, setDictAttr } from "../config/utils";
 import { ISeller, Seller } from "../models/sellers";
-import { Category, ICategory, IReview, OrderItem, Product, Review } from "../models/shop";
+import { Category, ICategory, IReview, IVariant, OrderItem, Product, Review } from "../models/shop";
 import { NotFoundError, ValidationErr } from "../config/handlers";
 import { paginateModel, paginateRecords } from "../config/paginators";
-import { ProductDetailSchema, ProductsResponseSchema } from "../schemas/shop";
+import { ProductDetailSchema, ProductsResponseSchema, VariantSchema } from "../schemas/shop";
 import { getProducts } from "../managers/shop";
 import { getAvgRating } from "../models/utils";
 import { SELLER_POPULATION } from "../managers/users";
@@ -288,6 +288,54 @@ sellerRouter.post(
             product.variants.push(data)
             await product.save()
             return res.status(200).json(CustomResponse.success('Variant Added Successfully'))
+        } catch (error) {
+            next(error)
+        }
+    });
+
+    /**
+ * @route PUT /products/:slug/variants/:id
+ * @description Allows a vendor to edit a variant to a product.
+ */
+sellerRouter.put(
+    '/products/:slug/variants/:id', 
+    sellerMiddleware, 
+    upload(variantFileFields, variantFileSizes, {}),
+    validationMiddleware(VariantEditSchema), 
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const user = req.user
+            const { size, color, price, stock, desc } = req.body
+
+
+            const product = await Product.findOne({ seller: user.seller._id, slug: req.params.slug })
+            if(!product) throw new NotFoundError("Vendor Product does not exist")
+            
+            const variant: IVariant | undefined = product.variants.find((variant: IVariant) => variant._id.toString() === req.params.id )
+            if (!variant) throw new NotFoundError("Variant doesn't exist for that product")
+
+            // Cannot edit a variant price or picture that already has an confirmed order
+            // Just create another and set the existing variant stock to 0
+            const orderitemExists = await OrderItem.exists({ product: product._id, variant: variant._id, order: { $ne: null } })
+            if (orderitemExists) {
+                if (size) throw new ValidationErr("size", "Size is unchangeable")
+                if (color) throw new ValidationErr("color", "Color is unchangeable")
+                if (price) throw new ValidationErr("price", "Price is unchangeable")
+                if (desc) throw new ValidationErr("desc", "Description is unchangeable")
+            } else {
+                if (size) variant.size = size
+                if (color) variant.color = color
+                if (price) variant.price = price
+                if (desc) variant.desc = desc
+            }
+            if (stock) variant.stock = stock
+            // Handle file upload
+            const files = req.files as { [fieldname: string]: Express.Multer.File[] }
+            const image = await uploadFileToCloudinary(files.image?.[0]?.buffer, FILE_FOLDER_CHOICES.PRODUCT) 
+            if (image) variant.image = image
+            await product.save()
+            // Ignore null values when updating from dict
+            return res.status(200).json(CustomResponse.success('Variant Updated Successfully', variant, VariantSchema))
         } catch (error) {
             next(error)
         }

@@ -28,6 +28,7 @@ interface IVariant {
     _id: Types.ObjectId;
     size: SIZE_CHOICES, 
     color: COLOR_CHOICES, 
+    desc: string;
     stock: number, 
     image: string,
     price: number;
@@ -43,7 +44,7 @@ interface IProduct extends IBase {
     priceCurrent: number;
     category: Types.ObjectId | ICategory
     stock: number; 
-    variants: IVariant[];
+    variants: Types.Array<IVariant>;
     image1: string;
     image2: string;
     image3: string;
@@ -63,22 +64,14 @@ const ProductSchema = new Schema<IProduct>({
     priceOld: { type: Number, default: null },
     priceCurrent: { type: Number, required: true },
     category: { type: Schema.Types.ObjectId, ref: 'Category' },
-    stock: { 
-        type: Number, default: null,
-        validate: {
-            validator: function (value) {
-                // If there are variants, stock should be undefined or 0
-                return !this.variants || this.variants.length === 0 || value === 0;
-            },
-            message: 'General stock should not be set when variants exist.'
-        }
-    },
+    stock: { type: Number, default: 1 },
 
     variants: {
         type: [
             new Schema({
                 size: { type: String, enum: SIZE_CHOICES, default: null },
                 color: { type: String, enum: COLOR_CHOICES, default: null },
+                desc: { type: String, maxlength: 1000, default: null },
                 stock: { type: Number, required: true },
                 image: { type: String, default: null },
                 price: { type: Number, required: true }
@@ -265,4 +258,4 @@ OrderItemSchema.index({ guest: 1, product: 1 }, { unique: true, sparse: true });
 
 const OrderItem = model<IOrderItem>('OrderItem', OrderItemSchema);
 
-export { ICategory, Category, IProduct, Product, IReview, Review, IWishlist, Wishlist, ICoupon, Coupon, IOrder, Order, IOrderItem, OrderItem }
+export { ICategory, Category, IVariant, IProduct, Product, IReview, Review, IWishlist, Wishlist, ICoupon, Coupon, IOrder, Order, IOrderItem, OrderItem }
