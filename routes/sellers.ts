@@ -341,4 +341,35 @@ sellerRouter.put(
         }
     });
 
+/**
+ * @route DELETE /products/:slug/variants/:id
+ * @description Allows a seller to delete a variant from a product.
+ */
+sellerRouter.delete('/products/:slug/variants/:id', sellerMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user
+        const product = await Product.findOne({ seller: user.seller._id, slug: req.params.slug })
+        if(!product) throw new NotFoundError("Seller Product does not exist")
+        
+        const variant: IVariant | undefined = product.variants.find((variant: IVariant) => variant._id.toString() === req.params.id )
+        if (!variant) throw new NotFoundError("Variant doesn't exist for that product")
+
+        // Cannot remove a variant that already has an confirmed order
+        // Just set the existing variant stock to 0
+        const orderitemExists = await OrderItem.exists({ product: product._id, variant: variant._id, order: { $ne: null } })
+        if (orderitemExists) {
+            // Set the stock to 0
+            variant.stock = 0
+            await product.save()
+        } else {
+            // Remove the variant entirely
+            product.variants.pull({ _id: variant._id })
+            await product.save()
+        }
+        return res.status(200).json(CustomResponse.success('Variant Deleted Successfully'))
+    } catch (error) {
+        next(error)
+    }
+});
+
 export default sellerRouter;
