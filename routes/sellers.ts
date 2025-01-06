@@ -2,7 +2,7 @@ import { NextFunction, Request, Response, Router } from "express";
 import { authMiddleware, sellerMiddleware } from "../middlewares/auth";
 import { upload, uploadFileToCloudinary } from "../config/file_processor";
 import { validationMiddleware } from "../middlewares/error";
-import { ProductCreateSchema, ProductEditSchema, SellerApplicationSchema, VariantCreateSchema, VariantEditSchema } from "../schemas/sellers";
+import { ProductCreateSchema, ProductEditSchema, SellerApplicationSchema, SellerDashboardSchema, VariantCreateSchema, VariantEditSchema } from "../schemas/sellers";
 import { DELIVERY_STATUS_CHOICES, FILE_FOLDER_CHOICES, FILE_SIZE_CHOICES, PAYMENT_STATUS_CHOICES } from "../models/choices";
 import { CustomResponse, setDictAttr } from "../config/utils";
 import { ISeller, Seller } from "../models/sellers";
@@ -395,5 +395,29 @@ sellerRouter.get('/orders', sellerMiddleware, async (req: Request, res: Response
         next(error)
     }
 });
+
+/**
+ * @route GET /dashboard
+ * @description Seller Dashboard.
+ */
+sellerRouter.get('/dashboard', sellerMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const seller = req.user.seller
+        const products = await getProducts(null, { seller: seller._id })
+        const productsData = await paginateRecords(req, products)
+        const orders = await getSellerOrdersWithDetailedOrderItems({}, seller._id)
+        const ordersData = await paginateRecords(req, orders)
+
+        const sellerData = {
+            name: seller.name, image: seller.image,
+            productsData: { products: productsData.items, ...productsData }, 
+            ordersData: { orders: ordersData.items, ...ordersData }
+        }
+        return res.status(200).json(CustomResponse.success(`Dashboard returned successfully`, sellerData, SellerDashboardSchema))
+    } catch (error) {
+        next(error)
+    }
+});
+
 
 export default sellerRouter;

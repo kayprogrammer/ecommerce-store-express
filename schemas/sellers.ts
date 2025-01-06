@@ -3,6 +3,7 @@ import { BUSINESS_TYPE_CHOICES, COLOR_CHOICES, SIZE_CHOICES } from "../models/ch
 import { Example, transformToNumber } from "./utils";
 import { ID_EXAMPLE } from "./base";
 import { IsArray, IsEmail, IsEnum, IsMongoId, IsNotEmpty, IsNumber, IsNumberString, IsOptional, IsPhoneNumber, IsString, IsTaxId, Length, Max, Min } from "class-validator";
+import { OrdersResponseSchema, ProductsResponseSchema } from "./shop";
 
 
 export class SellerApplicationSchema {
@@ -289,4 +290,22 @@ export class VariantEditSchema {
     @Transform(transformToNumber)
     @IsOptional()
     price?: number;
+}
+
+export class SellerDashboardSchema {
+    @Expose()
+    @Example("John Doe")
+    name?: string;
+    
+    @Expose()
+    @Example("https://alala.com")
+    image?: string;
+    
+    @Expose()
+    @Type(() => ProductsResponseSchema)
+    productsData?: ProductsResponseSchema;
+    
+    @Expose()
+    @Type(() => OrdersResponseSchema)
+    ordersData?: OrdersResponseSchema;
 }
