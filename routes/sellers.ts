@@ -3,16 +3,18 @@ import { authMiddleware, sellerMiddleware } from "../middlewares/auth";
 import { upload, uploadFileToCloudinary } from "../config/file_processor";
 import { validationMiddleware } from "../middlewares/error";
 import { ProductCreateSchema, ProductEditSchema, SellerApplicationSchema, VariantCreateSchema, VariantEditSchema } from "../schemas/sellers";
-import { FILE_FOLDER_CHOICES, FILE_SIZE_CHOICES } from "../models/choices";
+import { DELIVERY_STATUS_CHOICES, FILE_FOLDER_CHOICES, FILE_SIZE_CHOICES, PAYMENT_STATUS_CHOICES } from "../models/choices";
 import { CustomResponse, setDictAttr } from "../config/utils";
 import { ISeller, Seller } from "../models/sellers";
 import { Category, ICategory, IReview, IVariant, OrderItem, Product, Review } from "../models/shop";
-import { NotFoundError, ValidationErr } from "../config/handlers";
+import { InvalidParamError, NotFoundError, ValidationErr } from "../config/handlers";
 import { paginateModel, paginateRecords } from "../config/paginators";
-import { ProductDetailSchema, ProductsResponseSchema, VariantSchema } from "../schemas/shop";
+import { OrdersResponseSchema, ProductDetailSchema, ProductsResponseSchema, VariantSchema } from "../schemas/shop";
 import { getProducts } from "../managers/shop";
 import { getAvgRating } from "../models/utils";
 import { SELLER_POPULATION } from "../managers/users";
+import { isPartOfEnum } from "./utils";
+import { getSellerOrdersWithDetailedOrderItems } from "../managers/sellers";
 
 const sellerRouter = Router();
 
@@ -367,6 +369,28 @@ sellerRouter.delete('/products/:slug/variants/:id', sellerMiddleware, async (req
             await product.save()
         }
         return res.status(200).json(CustomResponse.success('Variant Deleted Successfully'))
+    } catch (error) {
+        next(error)
+    }
+});
+
+/**
+ * @route GET /orders
+ * @description List all seller orders.
+ */
+sellerRouter.get('/orders', sellerMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user
+        const { paymentStatus, deliveryStatus } = req.query
+        if (paymentStatus && !isPartOfEnum(paymentStatus as string, PAYMENT_STATUS_CHOICES)) throw new InvalidParamError("Invalid payment status")
+        if (deliveryStatus && !isPartOfEnum(deliveryStatus as string, DELIVERY_STATUS_CHOICES)) throw new InvalidParamError("Invalid delivery status")
+
+        const filter: Record<string,any> = {}
+        if (paymentStatus) filter.paymentStatus = paymentStatus
+        const orders = await getSellerOrdersWithDetailedOrderItems(filter, user.seller._id, deliveryStatus as string | null)
+        const data = await paginateRecords(req, orders)
+        const ordersData = { orders: data.items, ...data }
+        return res.status(200).json(CustomResponse.success(`Orders returned successfully`, ordersData, OrdersResponseSchema))
     } catch (error) {
         next(error)
     }
