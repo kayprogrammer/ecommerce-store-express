@@ -12,8 +12,10 @@ import seedData from "./seed.json"
 import { ISeller, Seller } from "../models/sellers"
 import * as path from "path";
 import * as fs from "fs";
+import mime from 'mime-types';
+
 import { uploadFileToCloudinary } from "../config/file_processor"
-import { FILE_FOLDER_CHOICES, SELLER_STATUS_CHOICES } from "../models/choices"
+import { COLOR_CHOICES, FILE_FOLDER_CHOICES, SELLER_STATUS_CHOICES, SIZE_CHOICES } from "../models/choices"
 import { getRandomItem } from "../config/utils"
 
 // Define base directory
@@ -86,15 +88,27 @@ const createProducts = async (seller: ISeller, categories: ICategory[]): Promise
                 // Upload image
                 const imagePath = path.join(testProductImagesDirectory, image);
                 const imageBuffer = fs.readFileSync(imagePath)
-                const imageUrl = await uploadFileToCloudinary(imageBuffer, FILE_FOLDER_CHOICES.PRODUCT);
+                const imageMimetype = mime.lookup(imagePath) || 'application/octet-stream';
+                const imageFile = { buffer: imageBuffer, mimetype: imageMimetype } as Express.Multer.File
+                const imageUrl = await uploadFileToCloudinary(imageFile.buffer, FILE_FOLDER_CHOICES.PRODUCT);
 
                 const category = getRandomItem(categories)
                 const productName = seedData.products[index]
-                return {
+                const docs: Record<string,any> = { 
                     seller: seller._id, name: productName, slug:  slugify(productName, { lower: true }),
                     category: category._id, desc: "This is a good product", priceOld: (index + 1) * 50,
                     priceCurrent: (index + 1) * 45, stock: (index + 1) * 20, image1: imageUrl,
                 };
+                if (index === 1) {
+                    // Create some variants for at least a product
+                    docs.stock = 0
+                    docs.variants = [
+                        { size: SIZE_CHOICES.M, color: COLOR_CHOICES.GREEN, desc: "Ideal for medium-sized machinery, dimensions: 100x100x100cm", stock: 30, image: "https://ala.com", price: 10000 },
+                        { size: SIZE_CHOICES.S, color: COLOR_CHOICES.BLACK, desc: "Ideal for medium-sized machinery, dimensions: 300x400x500cm", stock: 60, image: "https://alaaa.com", price: 20000 },
+                        { size: SIZE_CHOICES.XS, color: COLOR_CHOICES.WHITE, desc: "Ideal for medium-sized machinery, dimensions: 600x700x800cm", stock: 50, image: "https://alsa.com", price: 30000 },
+                    ]
+                }
+                return docs
             }));
             products = await Product.insertMany(productDocs) as IProduct[]
         } else {
