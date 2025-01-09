@@ -1,4 +1,4 @@
-import { ProductCreateSchema, ProductEditSchema, SellerApplicationSchema, SellerDashboardSchema } from "../schemas/sellers"
+import { ProductCreateSchema, ProductEditSchema, SellerApplicationSchema, SellerDashboardSchema, VariantCreateSchema } from "../schemas/sellers"
 import { ERROR_EXAMPLE_422, ERROR_EXAMPLE_500, ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN, FAILURE_STATUS, PRODUCT_NOT_FOUND_RESPONSE, SUCCESS_STATUS } from "./base"
 import { generatePaginationParamExample, generateParamExample, generateSwaggerRequestExample, generateSwaggerResponseExample } from "./utils"
 import { ProductDetailSchema, ProductsResponseSchema } from "../schemas/shop"
@@ -135,7 +135,28 @@ const sellerProductDocs = {
     }
 }
 
+const variantCreateDocs = {
+    post: {
+        tags,
+        summary: 'Add variant to product',
+        description: `
+            Allows a seller to add a variant to a product
+        `,
+        security: [{ BearerAuth: [] }],
+        parameters: [generateParamExample("slug", "Slug of the product", "string", "product-slug", "path")],
+        requestBody: generateSwaggerRequestExample("Variant create", VariantCreateSchema, "multipart/form-data"),
+        responses: {
+            200: generateSwaggerResponseExample('Variant Added Successfully Response', SUCCESS_STATUS, "Variant Added Successfully"),
+            401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
+            404: PRODUCT_NOT_FOUND_RESPONSE,
+            400: generateSwaggerResponseExample("Bad Request Variant", FAILURE_STATUS, "Variants max amount exceeded"),
+            422: ERROR_EXAMPLE_422,
+            500: ERROR_EXAMPLE_500
+        }
+    }
+}
+
 export { 
-    sellerApplicationDocs, sellerDashboardDocs, sellerProductsDocs, sellerProductDocs,
+    sellerApplicationDocs, sellerDashboardDocs, sellerProductsDocs, sellerProductDocs, variantCreateDocs
     
 }
