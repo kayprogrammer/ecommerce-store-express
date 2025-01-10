@@ -1,8 +1,9 @@
-import { ProductCreateSchema, ProductEditSchema, SellerApplicationSchema, SellerDashboardSchema, VariantCreateSchema } from "../schemas/sellers"
+import { ProductCreateSchema, ProductEditSchema, SellerApplicationSchema, SellerDashboardSchema, VariantCreateSchema, VariantEditSchema } from "../schemas/sellers"
 import { ERROR_EXAMPLE_422, ERROR_EXAMPLE_500, ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN, FAILURE_STATUS, PRODUCT_NOT_FOUND_RESPONSE, SUCCESS_STATUS } from "./base"
 import { generatePaginationParamExample, generateParamExample, generateSwaggerRequestExample, generateSwaggerResponseExample } from "./utils"
-import { ProductDetailSchema, ProductsResponseSchema } from "../schemas/shop"
+import { ProductDetailSchema, ProductsResponseSchema, VariantSchema } from "../schemas/shop"
 import { ErrorCode } from "../config/handlers"
+import { ID_EXAMPLE } from "../schemas/base"
 
 const tags = ["Sellers"]
 
@@ -156,7 +157,53 @@ const variantCreateDocs = {
     }
 }
 
+const PRODUCT_OR_VARIANT_NOT_FOUND_RESPONSE = generateSwaggerResponseExample('Variant or Product Not Found Error Response', FAILURE_STATUS, "Variant or Product does not exist")
+
+const variantUpdateDeleteDocs = {
+    put: {
+        tags,
+        summary: 'Update a variant in a product',
+        description: `
+            Allows a seller to update a variant in a product
+        `,
+        security: [{ BearerAuth: [] }],
+        parameters: [
+            generateParamExample("slug", "Slug of the product", "string", "product-slug", "path"),
+            generateParamExample("id", "id of the variant", "string", ID_EXAMPLE, "path")
+        ],
+        requestBody: generateSwaggerRequestExample("Variant update", VariantEditSchema, "multipart/form-data"),
+        responses: {
+            200: generateSwaggerResponseExample('Variant Updated Successfully Response', SUCCESS_STATUS, "Variant Updated Successfully", VariantSchema),
+            400: generateSwaggerResponseExample("Bad Request Variant", FAILURE_STATUS, "Variants max amount exceeded"),
+            401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
+            404: PRODUCT_OR_VARIANT_NOT_FOUND_RESPONSE,
+            422: ERROR_EXAMPLE_422,
+            500: ERROR_EXAMPLE_500
+        }
+    },
+    delete: {
+        tags,
+        summary: 'Delete a variant in a product',
+        description: `
+            Allows a seller to delete a variant in a product
+            If there's already an existing confirmed order for that variant, the stock changes to 0 instead
+        `,
+        parameters: [
+            generateParamExample("slug", "Slug of the product", "string", "product-slug", "path"),
+            generateParamExample("id", "id of the variant", "string", ID_EXAMPLE, "path")
+        ],
+        security: [{ BearerAuth: [] }],
+        responses: {
+            200: generateSwaggerResponseExample('Variant Deleted Successfully Response', SUCCESS_STATUS, "Variant Deleted Successfully"),
+            401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
+            404: PRODUCT_OR_VARIANT_NOT_FOUND_RESPONSE,
+            500: ERROR_EXAMPLE_500
+        }
+    }
+}
+
 export { 
-    sellerApplicationDocs, sellerDashboardDocs, sellerProductsDocs, sellerProductDocs, variantCreateDocs
+    sellerApplicationDocs, sellerDashboardDocs, sellerProductsDocs, sellerProductDocs, 
+    variantCreateDocs, variantUpdateDeleteDocs
     
 }

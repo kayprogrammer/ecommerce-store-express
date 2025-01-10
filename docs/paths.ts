@@ -1,7 +1,7 @@
 import { facebookLoginDocs, googleLoginDocs, loginDocs, logoutAllDocs, logoutDocs, passwordResetDocs, passwordResetRequestEmailDocs, refreshTokenDocs, registerDocs, resendVerificationEmailDocs, verifyEmailDocs } from "./auth"
 import { siteDetailDocs } from "./general"
 import { countriesDocs, profileDocs, shippingAddressDocs, shippingAddressesDocs } from "./profiles"
-import { sellerApplicationDocs, sellerProductDocs, sellerProductsDocs, variantCreateDocs } from "./sellers"
+import { sellerApplicationDocs, sellerProductDocs, sellerProductsDocs, variantCreateDocs, variantUpdateDeleteDocs } from "./sellers"
 import { categoriesDocs, categoryProductsDocs, checkoutDocs, orderDocs, productDocs, productsDocs, wishlistDocs } from "./shop"
 
 export const SWAGGER_PATHS = {
@@ -41,4 +41,5 @@ export const SWAGGER_PATHS = {
     '/sellers/products': sellerProductsDocs,
     '/sellers/products/{slug}': sellerProductDocs,
     '/sellers/products/{slug}/variants': variantCreateDocs,
+    '/sellers/products/{slug}/variants/{id}': variantUpdateDeleteDocs,
 }
