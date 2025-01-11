@@ -1,9 +1,10 @@
 import { ProductCreateSchema, ProductEditSchema, SellerApplicationSchema, SellerDashboardSchema, VariantCreateSchema, VariantEditSchema } from "../schemas/sellers"
 import { ERROR_EXAMPLE_422, ERROR_EXAMPLE_500, ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN, FAILURE_STATUS, PRODUCT_NOT_FOUND_RESPONSE, SUCCESS_STATUS } from "./base"
 import { generatePaginationParamExample, generateParamExample, generateSwaggerRequestExample, generateSwaggerResponseExample } from "./utils"
-import { ProductDetailSchema, ProductsResponseSchema, VariantSchema } from "../schemas/shop"
+import { OrdersResponseSchema, ProductDetailSchema, ProductsResponseSchema, VariantSchema } from "../schemas/shop"
 import { ErrorCode } from "../config/handlers"
 import { ID_EXAMPLE } from "../schemas/base"
+import { DELIVERY_STATUS_CHOICES, PAYMENT_STATUS_CHOICES } from "../models/choices"
 
 const tags = ["Sellers"]
 
@@ -202,8 +203,30 @@ const variantUpdateDeleteDocs = {
     }
 }
 
+const sellerOrderDocs = {
+    get: {
+        tags,
+        summary: "Get all orders partaining to a seller",
+        description: `
+            Allows a seller to get all orders partaining to his/her products.
+        `,
+        security: [{ BearerAuth: [] }],
+        parameters: [
+            generateParamExample("paymentStatus", "Payment status of the order", 'string', PAYMENT_STATUS_CHOICES.PENDING),
+            generateParamExample("deliveryStatus", "Delivery status of the order", 'string', DELIVERY_STATUS_CHOICES.PENDING),
+            ...generatePaginationParamExample("orders")
+        ],
+        responses: {
+            200: generateSwaggerResponseExample('Orders Successful Response', SUCCESS_STATUS, "Orders Fetched Successfully", OrdersResponseSchema),
+            401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
+            400: generateSwaggerResponseExample("Invalid Param Response", FAILURE_STATUS, "Invalid payment or delivery status"),
+            500: ERROR_EXAMPLE_500
+        }
+    }
+}
+
 export { 
     sellerApplicationDocs, sellerDashboardDocs, sellerProductsDocs, sellerProductDocs, 
-    variantCreateDocs, variantUpdateDeleteDocs
+    variantCreateDocs, variantUpdateDeleteDocs, sellerOrderDocs
     
 }
