@@ -27,28 +27,44 @@ const readTemplate = (filePath: string, replacements: Record<string, string>): s
     return htmlContent;
 };
 
-const getEmailDetails = async (type: "activate" | "reset" | "reset-success" | "welcome", user: IUser): Promise<{ templatePath: string; subject: string; context: Record<string, string> }> => {
+const getEmailDetails = async (type: "activate" | "reset" | "reset-success" | "welcome" | "payment-success" | "payment-failed", user: IUser, paymentData: Record<string,any> | null): Promise<{ templatePath: string; subject: string; context: Record<string, string> }> => {
     let templatePath = 'welcome.html';
     let subject = 'Welcome!';
-    let context: Record<string,any> = { name: user.name };
-    let otp = await createOtp(user);
-
+    let context: Record<string,any> = { name: user?.name };
+    let paymentType = ""
     switch (type) {
         case 'activate':
             templatePath = 'email-activation.html';
             subject = 'Activate your account';
             // Simulate OTP generation
+            let otp = await createOtp(user);
             context.otp = otp; // Replace with actual OTP logic
             break;
         case 'reset':
             templatePath = 'password-reset.html';
             subject = 'Reset your password';
             // Simulate OTP generation
+            otp = await createOtp(user);
             context.otp = otp; // Replace with actual OTP logic
             break;
         case 'reset-success':
             templatePath = 'password-reset-success.html';
             subject = 'Password reset successfully';
+            break;
+        case 'payment-success':
+            paymentType = paymentData?.type
+            templatePath = 'payment-success.html';
+            subject = `Payment ${paymentType}`;
+            context.message = `Your payment of ₦${paymentData?.amount} was ${paymentType}`;
+            context.paymentName = paymentData?.name;
+            break;
+        case 'payment-failed':
+            paymentType = paymentData?.type
+            const message = paymentType === "invalid" ? `Your payment of ₦${paymentData?.amount} was invalid` : `Your payment of ₦${paymentData?.amount} failed`;
+            templatePath = 'payment-failed.html';
+            subject = `Payment ${paymentType}`;
+            context.message = message;
+            context.paymentName = paymentData?.name;
             break;
         default:
             break;
@@ -64,15 +80,14 @@ const getEmailDetails = async (type: "activate" | "reset" | "reset-success" | "w
  * @returns {Promise<void>} - A promise that resolves when the email is sent.
  * @throws {Error} - Throws an error if sending the email fails.
  */
-const sendEmail = async (type: "activate" | "reset" | "reset-success" | "welcome", user: any): Promise<void> => {
+const sendEmail = async (type: "activate" | "reset" | "reset-success" | "welcome" | "payment-success" | "payment-failed", user: any, paymentData: Record<string,any> | null = null): Promise<void> => {
     if (ENV.NODE_ENV === "test") return
-    const { templatePath, subject, context } = await getEmailDetails(type, user);
-
+    const { templatePath, subject, context } = await getEmailDetails(type, user, paymentData);
     const htmlContent = readTemplate(templatePath, context);
 
     const mailOptions = {
         from: ENV.DEFAULT_FROM_EMAIL,
-        to: user.email,
+        to: user?.email || paymentData?.email || ENV.DEFAULT_FROM_EMAIL,
         subject,
         html: htmlContent,
     };

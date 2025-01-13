@@ -201,6 +201,8 @@ interface IOrder extends IBase {
     dateDelivered: Date | null;
     shippingDetails: IShippingAddress;
     orderItems: IOrderItem[];
+
+    total: number;
 }
 
 // Create the Order schema
@@ -218,6 +220,12 @@ const OrderSchema = new Schema<IOrder>({
         country: { type: String }, zipcode: { type: Number }, 
     }
 }, { timestamps: true });
+
+OrderSchema.virtual('total').get(function() {
+    const orderitems = this.orderItems
+    const total = orderitems.reduce((sum, item) => sum + item.total, 0);
+    return total;
+});
 
 OrderSchema.pre('save', async function (next) {
     try {
@@ -240,6 +248,8 @@ interface IOrderItem extends IBase {
     order: Types.ObjectId | IOrder; 
     quantity: number;
     variant: Types.ObjectId | IVariant;
+
+    total: number;
 }
 
 // Create the OrderItem schema
@@ -252,9 +262,20 @@ const OrderItemSchema = new Schema<IOrderItem>({
     variant: { type: Schema.Types.ObjectId, default: null }
 }, { timestamps: true });
 
+OrderItemSchema.virtual('total').get(function() {
+    const product = this.product as IProduct
+    const quantity = this.quantity
+    if (this.variant) {
+        const variant = product.variants.find((variant) => variant._id === this.variant)
+        return quantity * (variant as IVariant).price
+    } else {
+        return quantity * product.priceCurrent
+    }
+});
+
 // Define unique constraints
-OrderItemSchema.index({ user: 1, product: 1 }, { unique: true, sparse: true });
-OrderItemSchema.index({ guest: 1, product: 1 }, { unique: true, sparse: true });
+OrderItemSchema.index({ user: 1, product: 1, variant: 1 }, { unique: true, sparse: true });
+OrderItemSchema.index({ guest: 1, product: 1, variant: 1 }, { unique: true, sparse: true });
 
 const OrderItem = model<IOrderItem>('OrderItem', OrderItemSchema);
 

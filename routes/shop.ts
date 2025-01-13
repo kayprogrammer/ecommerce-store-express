@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response, Router } from "express";
 import { paginateModel, paginateRecords } from "../config/paginators";
-import { Category, IReview, OrderItem, Product, Review, Wishlist } from "../models/shop";
+import { Category, IReview, Order, OrderItem, Product, Review, Wishlist } from "../models/shop";
 import { SELLER_POPULATION } from "../managers/users";
 import { CustomResponse } from "../config/utils";
 import { AddToCartSchema, CategorySchema, CheckoutSchema, OrderItemSchema, OrderSchema, OrdersResponseSchema, ProductDetailSchema, ProductsResponseSchema, ReviewCreateSchema, ReviewSchema, WishlistCreateSchema } from "../schemas/shop";
@@ -10,6 +10,10 @@ import { validationMiddleware } from "../middlewares/error";
 import { confirmOrder, getOrderItems, getOrdersWithDetailedOrderItems, getProducts } from "../managers/shop";
 import { getAvgRating } from "../models/utils";
 import { ShippingAddress } from "../models/profiles";
+import http from "../config/http";
+import ENV from "../config/conf";
+import { sendEmail } from "../config/emailer";
+import { PAYMENT_STATUS_CHOICES } from "../models/choices";
 
 const shopRouter = Router();
 
@@ -253,6 +257,71 @@ shopRouter.get('/orders', authMiddleware, async (req: Request, res: Response, ne
     } catch (error) {
         next(error)
     }
+});
+
+shopRouter.post("/webhook", async (req, res) => {
+    const signature = req.headers["verif-hash"];
+    if (!signature || (signature !== ENV.FLW_SECRET_HASH)) {
+        // This request isn't from Flutterwave; discard
+        res.status(401).end();
+    }
+    const payload = req.body;
+    const response = await http.setBaseUrl(ENV.FLW_VERIFICATION_URL).setBearerToken(ENV.FLW_SECK).get("", { tx_ref: payload.txRef });
+    const data = (await response.json())?.data
+    if (!data) {
+        // This transaction doesn't exist; discard
+        res.status(200).end();
+    }
+    const status = data.status.toLowerCase();
+    const customer = data.customer
+    if (!customer) {
+        // This customer doesn't exist; discard
+        // Apply correct logging here later
+        res.status(200).end();
+    }
+    const paymentData: { name: string, email: string, type: string, amount: number } = { 
+        name: customer?.name.split(" ")[0], email: customer?.email, 
+        type: status, amount: data.amount 
+    }
+    const order = await Order.findOne({ txRef: data.tx_ref })
+        .populate({
+            path: 'orderItems',
+            populate: {
+                path: 'product', // Populate the product field inside each orderItem
+                model: 'Product', // Ensure the model name matches your schema
+            },
+        })
+    if (!order) {
+        // This order doesn't exist; discard
+        // Apply correct logging here later
+        paymentData.type = "invalid"
+        await sendEmail("payment-failed", null, paymentData)
+        res.status(200).end();
+        return
+    }
+    if (status === "successful") {
+        const amountPaid = data.amount;
+        if (amountPaid < order.total) {
+            // This payment is more than the order total; discard
+            // Apply correct logging here later
+            order.paymentStatus = PAYMENT_STATUS_CHOICES.FAILED
+            await order.save()
+            paymentData.type = "failed"
+            await sendEmail("payment-failed", null, paymentData)
+            res.status(200).end();
+            return
+        }
+
+        order.paymentStatus = PAYMENT_STATUS_CHOICES.SUCCESSFUL
+        await order.save()
+        await sendEmail("payment-success", null, paymentData)
+    } else if (status === "failed") {
+        order.paymentStatus = PAYMENT_STATUS_CHOICES.FAILED
+        await order.save()
+        await sendEmail("payment-failed", null, paymentData)
+        res.status(200).end()
+    }
+    res.status(200).end()
 });
 
 export default shopRouter

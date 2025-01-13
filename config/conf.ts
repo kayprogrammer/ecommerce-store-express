@@ -38,6 +38,10 @@ const envSchema = z.object({
   MONGO_URI: z.string().url(),
   SWAGGER_BASE_URL: z.string(),
   SOCIAL_PASSWORD: z.string(),
+  FLW_PUBK: z.string(),
+  FLW_SECK: z.string(),
+  FLW_SECRET_HASH: z.string(),
+  FLW_VERIFICATION_URL: z.string(),
 });
 
 // Validate and parse the environment variables

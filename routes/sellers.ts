@@ -6,7 +6,7 @@ import { ProductCreateSchema, ProductEditSchema, SellerApplicationSchema, Seller
 import { DELIVERY_STATUS_CHOICES, FILE_FOLDER_CHOICES, FILE_SIZE_CHOICES, PAYMENT_STATUS_CHOICES } from "../models/choices";
 import { CustomResponse, setDictAttr } from "../config/utils";
 import { ISeller, Seller } from "../models/sellers";
-import { Category, ICategory, IReview, IVariant, OrderItem, Product, Review } from "../models/shop";
+import { Category, ICategory, IReview, IVariant, Order, OrderItem, Product, Review } from "../models/shop";
 import { InvalidParamError, NotFoundError, ValidationErr } from "../config/handlers";
 import { paginateModel, paginateRecords } from "../config/paginators";
 import { OrdersResponseSchema, ProductDetailSchema, ProductsResponseSchema, VariantSchema } from "../schemas/shop";
@@ -418,6 +418,5 @@ sellerRouter.get('/dashboard', sellerMiddleware, async (req: Request, res: Respo
         next(error)
     }
 });
-
 
 export default sellerRouter;
