@@ -297,7 +297,7 @@ sellerRouter.post(
 
     /**
  * @route PUT /products/:slug/variants/:id
- * @description Allows a vendor to edit a variant to a product.
+ * @description Allows a seller to edit a variant to a product.
  */
 sellerRouter.put(
     '/products/:slug/variants/:id', 
@@ -311,7 +311,7 @@ sellerRouter.put(
 
 
             const product = await Product.findOne({ seller: user.seller._id, slug: req.params.slug })
-            if(!product) throw new NotFoundError("Vendor Product does not exist")
+            if(!product) throw new NotFoundError("Seller Product does not exist")
             
             const variant: IVariant | undefined = product.variants.find((variant: IVariant) => variant._id.toString() === req.params.id )
             if (!variant) throw new NotFoundError("Variant doesn't exist for that product")

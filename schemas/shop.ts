@@ -6,7 +6,7 @@ import { DATETIME_EXAMPLE, ID_EXAMPLE, PaginatedResponseSchema, UserSchema } fro
 import { IsEnum, IsMongoId, IsOptional, Length } from "class-validator";
 import { ShippingAddressBaseSchema } from "./profiles";
 
-export class VendorSchema {
+export class SellerSchema {
     @Expose()
     @Example("John Doe Stores")
     name?: string;
@@ -140,8 +140,8 @@ export class ProductListSchema {
 
 export class ProductDetailSchema extends ProductListSchema {
     @Expose()
-    @Type(() => VendorSchema)
-    vendor?: VendorSchema
+    @Type(() => SellerSchema)
+    seller?: SellerSchema
 
     @Expose()
     @Example("This is a nice shoe")
@@ -189,7 +189,7 @@ export class WishlistCreateSchema {
 
 export class OrderitemProductSchema {
     @Expose()
-    vendor?: VendorSchema;
+    seller?: SellerSchema;
 
     @Expose()
     @Example("Good shoes")
