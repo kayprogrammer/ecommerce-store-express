@@ -30,6 +30,7 @@ export const sellerMiddleware = async (req: Request, res: Response, next: NextFu
     const seller = await Seller.findOne({ user: user._id, status: SELLER_STATUS_CHOICES.APPROVED })
     if (!seller) throw new UnauthorizedError("For Sellers Only", ErrorCode.SELLERS_ONLY)
     user.seller = seller
+    req.user = user;
     next();
   } catch (error) {
     next(error)
@@ -42,6 +43,7 @@ export const adminMiddleware = async (req: Request, res: Response, next: NextFun
     if (!req.headers.authorization || !req.headers.authorization.startsWith('Bearer ')) throw new RequestError("Unauthorized User", 401, ErrorCode.UNAUTHORIZED_USER);
     const user = await getUser(req.headers.authorization.replace('Bearer ', ''));
     if(user.accountType !== ACCOUNT_TYPE_CHOICES.SUPERUSER && user.accountType !== ACCOUNT_TYPE_CHOICES.STAFF) throw new RequestError("For Admins only", 401, ErrorCode.ADMINS_ONLY)
+    req.user = user
     next();
   } catch (error) {
     next(error)

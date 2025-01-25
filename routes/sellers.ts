@@ -77,7 +77,6 @@ sellerRouter.get('/products', sellerMiddleware, async (req: Request, res: Respon
     try {
         const user = req.user
         const { name } = req.query;
-
         const filter: Record<string,any> = { seller: user.seller._id }
         if (name) filter.name = { $regex: name, $options: "i" }
 
@@ -163,7 +162,6 @@ sellerRouter.get('/products/:slug', sellerMiddleware, async (req: Request, res: 
         const data = await paginateModel(req, Review, { product: product._id }, "user", { rating: -1 } )
         product.avgRating = getAvgRating(data.items as IReview[])
         product.reviews = data
-        await product.save()
         return res.status(200).json(CustomResponse.success('Seller Product Details Fetched Successfully', product, ProductDetailSchema))
     } catch (error) {
         next(error)
@@ -387,7 +385,8 @@ sellerRouter.get('/orders', sellerMiddleware, async (req: Request, res: Response
 
         const filter: Record<string,any> = {}
         if (paymentStatus) filter.paymentStatus = paymentStatus
-        const orders = await getSellerOrdersWithDetailedOrderItems(filter, user.seller._id, deliveryStatus as string | null)
+        if (deliveryStatus) filter.deliveryStatus = deliveryStatus
+        const orders = await getSellerOrdersWithDetailedOrderItems(filter, user.seller._id)
         const data = await paginateRecords(req, orders)
         const ordersData = { orders: data.items, ...data }
         return res.status(200).json(CustomResponse.success(`Orders returned successfully`, ordersData, OrdersResponseSchema))

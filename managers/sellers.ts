@@ -1,7 +1,7 @@
 import { PipelineStage, Types } from "mongoose";
 import { Order } from "../models/shop";
 
-const getSellerOrdersWithDetailedOrderItems = async (filter: Record<string, any>, sellerId: Types.ObjectId, deliveryStatus: string | null = null) => {
+const getSellerOrdersWithDetailedOrderItems = async (filter: Record<string, any>, sellerId: Types.ObjectId) => {
     const pipeline: PipelineStage[] = [
         { $match: filter },
         { $sort: { createdAt: -1 } },
@@ -47,9 +47,6 @@ const getSellerOrdersWithDetailedOrderItems = async (filter: Record<string, any>
             $match: {
                 $and: [
                     { "orderItems.product.seller._id": sellerId },
-                    ...(deliveryStatus
-                        ? [{ "orderItems.deliveryStatus": deliveryStatus }]
-                        : []),
                 ],
             },
         },

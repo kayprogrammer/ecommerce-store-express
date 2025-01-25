@@ -2,7 +2,7 @@ import { facebookLoginDocs, googleLoginDocs, loginDocs, logoutAllDocs, logoutDoc
 import { siteDetailDocs } from "./general"
 import { countriesDocs, profileDocs, shippingAddressDocs, shippingAddressesDocs } from "./profiles"
 import { sellerApplicationDocs, sellerOrderDocs, sellerProductDocs, sellerProductsDocs, variantCreateDocs, variantUpdateDeleteDocs } from "./sellers"
-import { categoriesDocs, categoryProductsDocs, checkoutDocs, orderDocs, productDocs, productsDocs, wishlistDocs } from "./shop"
+import { cartDocs, categoriesDocs, categoryProductsDocs, checkoutDocs, orderDocs, productDocs, productsDocs, wishlistDocs } from "./shop"
 
 export const SWAGGER_PATHS = {
     // General routes
@@ -32,6 +32,7 @@ export const SWAGGER_PATHS = {
     '/shop/products/{slug}': productDocs,
     '/shop/wishlist': wishlistDocs,
     '/shop/categories': categoriesDocs,
+    '/shop/cart': cartDocs,
     '/shop/categories/{slug}': categoryProductsDocs,
     '/shop/checkout': checkoutDocs,
     '/shop/orders': orderDocs,

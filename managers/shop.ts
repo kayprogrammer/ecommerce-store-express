@@ -33,7 +33,9 @@ const getProducts = async (user: IUser | IGuest | null, filter: Record<string,an
                     from: 'wishlists', let: { productId: '$_id' },
                     pipeline: [
                         { $match: { $expr: { $eq: ['$product', '$$productId'] } } },
-                        { $match: { $or: userOrGuestMatch } },
+                        ...(userOrGuestMatch.length
+                            ? [{ $match: { $or: userOrGuestMatch } }]
+                            : [])
                     ], as: 'wishlistedDocs'
                 }
             },

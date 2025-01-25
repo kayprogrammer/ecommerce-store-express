@@ -182,7 +182,7 @@ shopRouter.get('/cart', authMiddleware, async (req: Request, res: Response, next
  * @route POST /cart
  * @description Add/Update/Remove item to & from cart.
  */
-shopRouter.post('/cart', authMiddleware, validationMiddleware(AddToCartSchema), async (req: Request, res: Response, next: NextFunction) => {
+shopRouter.post('/cart', authOrGuestMiddleware, validationMiddleware(AddToCartSchema), async (req: Request, res: Response, next: NextFunction) => {
     try {
         const user = req.user_
         const { slug, quantity, variantId } = req.body

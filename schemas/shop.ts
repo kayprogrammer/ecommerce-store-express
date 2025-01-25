@@ -52,6 +52,10 @@ export class VariantSchema {
     stock?: number;
 
     @Expose()
+    @Example("This is a good dimension")
+    desc?: string;
+
+    @Expose()
     @Example("https://image.url/shoeee")
     image?: string;
 
