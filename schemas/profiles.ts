@@ -93,9 +93,6 @@ export class ShippingAddressBaseSchema {
 
 export class ShippingAddressSchema extends ShippingAddressBaseSchema {
     @Expose()
-    user?: UserSchema;
-
-    @Expose()
     @Example(ID_EXAMPLE)
     id?: string;
 }

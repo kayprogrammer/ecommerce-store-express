@@ -34,7 +34,6 @@ profilesRouter.post('', authMiddleware, upload([{ name: "avatar", maxCount: 1 }]
         const { name } = req.body;
         const files = req.files as { [fieldname: string]: Express.Multer.File[] };
         const avatarFile = files.avatar?.[0];
-
         if (avatarFile) {
             user.avatar = await uploadFileToCloudinary(avatarFile.buffer, FILE_FOLDER_CHOICES.AVATAR)
         }
@@ -42,7 +41,7 @@ profilesRouter.post('', authMiddleware, upload([{ name: "avatar", maxCount: 1 }]
         await user.save()
         return res.status(200).json(
             CustomResponse.success(
-                'Profile updated successful', 
+                'Profile updated successfully', 
                 user, 
                 ProfileSchema
             )    

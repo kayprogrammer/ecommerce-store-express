@@ -3,11 +3,12 @@ import mongoose from 'mongoose';
 import app from '../index';
 import { IUser, User } from '../models/accounts';
 import { createOtp, createUser } from '../managers/users';
-import { BASE_URL, testTokens, testUser } from './utils';
+import { BASE_URL } from './utils';
 import TestAgent from 'supertest/lib/agent';
 import { ErrorCode } from '../config/handlers';
 import * as userManager from '../managers/users';
 import { MongoMemoryServer } from 'mongodb-memory-server';
+import { testTokens, testUser } from './data';
 
 describe("Testing User Authentication Flow", () => { 
     let mongoServer: MongoMemoryServer;
