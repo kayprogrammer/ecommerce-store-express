@@ -8,6 +8,7 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import { ICountry, IShippingAddress } from '../models/profiles';
 import { CountrySchema, ProfileSchema, ShippingAddressSchema } from '../schemas/profiles';
 import { testCountry, testShippingAddress, testTokens, testVerifiedUser } from './data';
+import { ErrorCode } from '../config/handlers';
 
 describe("Testing Profiles Flow", () => { 
     let mongoServer: MongoMemoryServer;
@@ -84,7 +85,7 @@ describe("Testing Profiles Flow", () => {
     });
 
     const addressData = {
-        name: 'Test User', email: 'test@wxample.com', phone: '+2341234560',
+        name: 'Test User', email: 'test@example.com', phone: '+2341234560',
         address: 'Test Address', city: 'Test City', state: 'Test State',
         countryId: new Types.ObjectId(), zipcode: 100001
     }
@@ -97,5 +98,64 @@ describe("Testing Profiles Flow", () => {
           message: "Invalid Entry",
           data: { countryId: "No country with that ID" }
         });
+    });
+
+    it('Should accept address creation due to valid data', async () => {
+        addressData.countryId = country.id;
+        const res = await authRequestApp.post(`${baseUrl}/addresses`).send(addressData);
+        expect(res.statusCode).toBe(200);
+        const respBody = res.body;
+        const { countryId, ...addressDataWithoutCountryId } = addressData;
+        const expectedResponseData = { ...addressDataWithoutCountryId, id: expect.any(String), country: country.name }
+        expect(respBody).toMatchObject({
+          status: "success",
+          message: "Address created successful",
+          data: expectedResponseData
+        });
+    });
+
+    it('Should reject address fetch due to invalid ID', async () => {
+      const res = await authRequestApp.get(`${baseUrl}/addresses/${new Types.ObjectId()}`);
+      expect(res.statusCode).toBe(404);
+      const respBody = res.body;
+      expect(respBody).toMatchObject({
+        status: "failure",
+        code: ErrorCode.NON_EXISTENT,
+        message: "User has no shipping address with that ID",
+      });
+    });
+
+    it('Should accept address fetch due to valid ID', async () => {
+      const res = await authRequestApp.get(`${baseUrl}/addresses/${address.id}`);
+      expect(res.statusCode).toBe(200);
+      const respBody = res.body;
+      expect(respBody).toMatchObject({
+        status: "success",
+        message: "Shipping Address Retrieved Successfully",
+        data: convertSchemaData(ShippingAddressSchema, address)
+      });
+    });
+
+    it('Should accept address update due to valid data', async () => {
+      addressData.name = 'Test User Updated';
+      const res = await authRequestApp.put(`${baseUrl}/addresses/${address.id}`).send(addressData);
+      expect(res.statusCode).toBe(200);
+      const respBody = res.body;
+      address.name = addressData.name;
+      expect(respBody).toMatchObject({
+        status: "success",
+        message: "Shipping Address Updated Successfully",
+        data: convertSchemaData(ShippingAddressSchema, address)
+      });
+    });
+
+    it('Should accept address delete due to valid data', async () => {
+      const res = await authRequestApp.delete(`${baseUrl}/addresses/${address.id}`);
+      expect(res.statusCode).toBe(200);
+      const respBody = res.body;
+      expect(respBody).toMatchObject({
+        status: "success",
+        message: "Shipping Address Deleted Successfully",
+      });
     });
 });
