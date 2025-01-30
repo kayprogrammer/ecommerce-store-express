@@ -51,8 +51,7 @@ const sellerProductsDocs = {
             Allows an authenticated seller to fetch his/her products
         `,
         parameters: [
-            generateParamExample("name", "Filter Products By Name", "string", "Shirt"),
-            generateParamExample("status", "Status of the products to fetch", "string", "Pending"),
+            generateParamExample("name", "Filter Products By Name", "string", ""),
             ...generatePaginationParamExample("products")
         ],
         security: [{ BearerAuth: [] }],
@@ -212,8 +211,8 @@ const sellerOrderDocs = {
         `,
         security: [{ BearerAuth: [] }],
         parameters: [
-            generateParamExample("paymentStatus", "Payment status of the order", 'string', PAYMENT_STATUS_CHOICES.PENDING),
-            generateParamExample("deliveryStatus", "Delivery status of the order", 'string', DELIVERY_STATUS_CHOICES.PENDING),
+            generateParamExample("paymentStatus", "Payment status of the order (Pending, Processing, Successful, Cancelled, Failed)", 'string', ""),
+            generateParamExample("deliveryStatus", "Delivery status of the order (Pending, Packing, Shipping, Arriving, Success)", 'string', ""),
             ...generatePaginationParamExample("orders")
         ],
         responses: {

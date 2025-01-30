@@ -42,7 +42,7 @@ const swaggerDocument = {
     title: "E-STORE EXPRESS API",
     version: '2.0.0',
     description: `
-      Ecommerce Store API built with Node Express Typescript By Kenechi Ifeanyi
+      Ecommerce Store API built with Node Express Typescript By Kenechi Ifeanyi (kayprogrammer)
       Github: https://github.com/kayprogrammer/ecommerce-store-express
     `
   },

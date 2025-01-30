@@ -14,7 +14,7 @@ const productsDocs = {
             Allows anyone to fetch a paginated data of the latest products
         `,
         parameters: [
-            generateParamExample("name", "Filter Products By Name", "string", "Shirt"),
+            generateParamExample("name", "Filter Products By Name", "string", ""),
             ...generatePaginationParamExample("products")
         ],
         security: [{ BearerAuth: [], GuestAuth: [] }],
@@ -116,7 +116,7 @@ const categoryProductsDocs = {
             Allows anyone to fetch all products in a category.
         `,
         parameters: [
-            generateParamExample("name", "Filter Products By Name", "string", "Shirt"),
+            generateParamExample("name", "Filter Products By Name", "string", ""),
             generateParamExample("slug", "Filter Products By Category Slug", "string", "clothing", "path"),
             ...generatePaginationParamExample("products")
         ],
@@ -188,8 +188,8 @@ const orderDocs = {
         `,
         security: [{ BearerAuth: [] }],
         parameters: [
-            generateParamExample("paymentStatus", "Payment status of the order", 'string', PAYMENT_STATUS_CHOICES.PENDING),
-            generateParamExample("deliveryStatus", "Delivery status of the order", 'string', DELIVERY_STATUS_CHOICES.PENDING),
+            generateParamExample("paymentStatus", "Payment status of the order (Pending, Processing, Successful, Cancelled, Failed)", 'string', ""),
+            generateParamExample("deliveryStatus", "Delivery status of the order (Pending, Packing, Shipping, Arriving, Success)", 'string', ""),
             ...generatePaginationParamExample("orders")
         ],
         responses: {
