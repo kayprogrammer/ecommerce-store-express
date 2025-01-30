@@ -14,6 +14,8 @@
 
 ***Account Verification***: Ensures user authenticity through email verification, enhancing the security of user accounts and preventing fraudulent activities.
 
+***Profiles Management***: Allows users to view, and update their profiles. Other features include shipping addresses view, create, update and delete.
+
 ***Shop Management***: Allows users and guests to navigate through products, add to wishlist, add to cart, create and confirm order, view orders etc.
 
 ***Seller Management***: Allows vendors/sellers to register as a seller, manage their products, variants and orders.
