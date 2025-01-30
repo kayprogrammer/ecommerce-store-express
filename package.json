@@ -1,7 +1,7 @@
 {
   "name": "ecommerce-store-express",
   "version": "1.0.0",
-  "description": "An ecommerce API built in ExpressJS and MongoDB",
+  "description": "An Ecommerce API Built With ExpressTS and MongoDB",
   "main": "index.js",
   "scripts": {
     "test": "NODE_ENV=test jest --detectOpenHandles --testTimeout=90000 --passWithNoTests",
