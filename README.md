@@ -1,4 +1,4 @@
-# SOCIALNET V7
+# ECOMMERCE STORE EXPRESS
 
 ![alt text](https://github.com/kayprogrammer/ecommerce-store-express/blob/main/assets/logo.png?raw=true)
 
