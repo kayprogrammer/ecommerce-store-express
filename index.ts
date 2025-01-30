@@ -39,10 +39,11 @@ if (ENV.NODE_ENV !== 'test') {
 const swaggerDocument = {
   openapi: '3.0.0',
   info: {
-    title: ENV.SITE_NAME,
+    title: "E-STORE EXPRESS API",
     version: '2.0.0',
     description: `
-      Ecommerce Store API built with Node Express Typescript
+      Ecommerce Store API built with Node Express Typescript By Kenechi Ifeanyi
+      Github: https://github.com/kayprogrammer/ecommerce-store-express
     `
   },
   servers: [{ url: '/api/v2' }],
@@ -86,7 +87,7 @@ app.use('/', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 if (ENV.NODE_ENV !== 'test') {
   app.listen(ENV.PORT, () => {
-    console.log(`${ENV.SITE_NAME} server is running on port ${ENV.PORT}`);
+    console.log(`Server is running on port ${ENV.PORT}`);
     console.log(`Connected to MongoDB at ${ENV.MONGO_URI}`);
   });
 }

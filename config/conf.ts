@@ -7,7 +7,6 @@ dotenv.config();
 // Define the schema for your environment variables
 const envSchema = z.object({
   SECRET_KEY: z.string(),
-  SITE_NAME: z.string(),
   NODE_ENV: z.enum(['development', 'staging', 'production', 'test']),
   CORS_ALLOWED_ORIGINS: z.string().transform((origins) => origins.split(',')),
   ACCESS_TOKEN_EXPIRE_MINUTES: z.string().transform(Number),
@@ -31,8 +30,6 @@ const envSchema = z.object({
   FIRST_REVIEWER_EMAIL: z.string().email(),
   FIRST_REVIEWER_PASSWORD: z.string(),
   SHIPPING_FEE: z.string().transform(Number),
-  PAYSTACK_SECRET_KEY: z.string(),
-  PAYSTACK_PUBLIC_KEY: z.string(),
   PORT: z.string().transform(Number),
   DEFAULT_AVATAR_URL: z.string(),
   MONGO_URI: z.string().url(),
